@@ -57,10 +57,10 @@ inline void addup_ddummy(su3adj** const df, const int ix, const int iy) {
 
 void xchange_deri(su3adj ** const df)
 {
-# ifdef MPI
+#  ifdef MPI
   int ix, t, y, z, x;
   MPI_Status status;
-# if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   int iy;
   /* The edges need to come first */
 
@@ -100,9 +100,9 @@ void xchange_deri(su3adj ** const df)
     }
   }
 
-#endif
+#    endif /* (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT) */
 
-# if (defined PARALLELXYT || defined PARALLELXYZT)
+#    if (defined PARALLELXYT || defined PARALLELXYZT)
   /* edges */
 
   /* send the data to the neighbour on the left in x direction */
@@ -179,20 +179,22 @@ void xchange_deri(su3adj ** const df)
     }
   }
 
-# endif
+#    endif /* (defined PARALLELXYT || defined PARALLELXYZT) */
 
-# ifdef PARALLELXYZT
+#    ifdef PARALLELXYZT
 
 
-# endif
+#    endif /* PARALLELXYZT */
 
   // now the normal boundaries
+
+#    if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
 
   /* send the data to the neighbour on the left in time direction */
   /* recieve the data from the neighbour on the right in time direction */
   MPI_Sendrecv((void*)df[gI_m1_0_0_0], 1, deri_time_slice_cont, g_nb_t_dn, 40,
-    void*)ddummy[gI_Lm1_0_0_0], 1, deri_time_slice_cont, g_nb_t_up, 40,
-    cart_grid, &status);
+    (void*)ddummy[gI_Lm1_0_0_0], 1, deri_time_slice_cont, g_nb_t_up, 40,
+    g_cart_grid, &status);
 
   /* add ddummy to df */
   for(x = 0; x < LX; x++) {
@@ -220,9 +222,9 @@ addup_ddummy(df, ix, ix);
     }
   }
 
+#    endif /* (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT) */
 
-
-# if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Sendrecv((void*)df[gI_0_m1_0_0], 1, deri_x_slice_cont, g_nb_x_dn, 42,
@@ -253,11 +255,10 @@ addup_ddummy(df, ix, ix);
     }
   }
 
-  /* end of ifdef PARALLELXT || PARALLELXYT */
-# endif
+#    endif /*(defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)*/
 
 
-# if (defined PARALLELXYT || defined PARALLELXYZT)
+#    if (defined PARALLELXYT || defined PARALLELXYZT)
 
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
@@ -288,11 +289,9 @@ addup_ddummy(df, ix, ix);
     }
   }
 
+#    endif /* (defined PARALLELXYT || defined PARALLELXYZT) */
 
-  /* end of ifdef PARALLELXYT */
-# endif
-
-# ifdef PARALLELXYZT
+#    ifdef PARALLELXYZT
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
   MPI_Sendrecv((void*)df[gI_0_0_0_0],1, deri_z_slice_cont, g_nb_z_dn, 46,
@@ -323,10 +322,9 @@ addup_ddummy(df, ix, ix);
     }
   }
 
-  /* end of ifdef PARALLELXYT */
-# endif
+#    endif /* PARALLELXYZT */
+#  endif /* MPI */
   return;
-# endif /* MPI */
 }
 
 #else /* _INDEX_INDEP_GEOM */
@@ -358,7 +356,6 @@ void xchange_deri(su3adj ** const df)
       iy = LY*LZ + y*LZ + z;
       addup_ddummy(df, ix, iy);
     }
-#  endif /* MPI */
   }
 
   /* send the data to the neighbour on the right in t direction */
@@ -381,7 +378,7 @@ void xchange_deri(su3adj ** const df)
     }
   }
 
-#endif
+#    endif /* (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT) */
 
 #    if (defined PARALLELXYT || defined PARALLELXYZT)
   /* edges */
@@ -468,12 +465,14 @@ void xchange_deri(su3adj ** const df)
     }
   }
 
-#    endif
+#    endif /* (defined PARALLELXYT || defined PARALLELXYZT)  */
 
 #    ifdef PARALLELXYZT
 
 
-#    endif
+#    endif /* PARALELLXYZT */
+
+#    if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
 
   // now the normal boundaries
 
@@ -509,7 +508,7 @@ void xchange_deri(su3adj ** const df)
     }
   }
 
-
+#    endif /* (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT) */
 
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   /* send the data to the neighbour on the left in x direction */
@@ -542,8 +541,7 @@ void xchange_deri(su3adj ** const df)
     }
   }
 
-  /* end of ifdef PARALLELXT || PARALLELXYT */
-#    endif
+#    endif /* (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT) */
 
 
 #    if (defined PARALLELXYT || defined PARALLELXYZT)
@@ -584,8 +582,7 @@ void xchange_deri(su3adj ** const df)
   }
 
 
-  /* end of ifdef PARALLELXYT */
-#    endif
+#    endif /* (defined PARALLELXYT || defined PARALLELXYZT) */
 
 #    ifdef PARALLELXYZT
   /* send the data to the neighbour on the left in y direction */
@@ -621,10 +618,9 @@ void xchange_deri(su3adj ** const df)
     }
   }
 
-  /* end of ifdef PARALLELXYT */
-#    endif
+#    endif /* PARALLELXYZT */
+#  endif /* MPI */
   return;
-#  endif
 }
 
 #endif /* _INDEX_INDEP_GEOM */
