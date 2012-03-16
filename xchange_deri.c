@@ -207,7 +207,7 @@ addup_ddummy(df, ix, ix);
   /* send the data to the neighbour on the right in time direction needed for clover */
 
   MPI_Sendrecv((void*)df[gI_L_0_0_0], 1, deri_time_slice_cont, g_nb_t_up, 41,
-    (void*)ddummy[g_0_0_0_0], 1, deri_time_slice_cont, g_nb_t_dn, 41,
+    (void*)ddummy[gI_0_0_0_0], 1, deri_time_slice_cont, g_nb_t_dn, 41,
     g_cart_grid, &status);
 
   /* add ddummy to df */
