@@ -177,13 +177,16 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
   su3 *w1, *w2, *w3, *w4;
   spinor *rn;
   static su3_vector psi, chi, phi1, phi3;
+#if (defined BGL && defined XLC)
+  double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
+  double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
+#endif
+
 
   if(mu < 0) ioff = VOLUME/2;
-  /************************ loop over all lattice sites *************************/
+  /******** loop over all lattice sites ***********/
 
   for(int icx = 0, icy = ioff; icx < (VOLUME/2); icx++, icy++) {
-/*     ix = g_eo2lexic[icx]; */
-
     rn = l + icx;
     _vector_assign(phi1,(*rn).s0);
     _vector_assign(phi3,(*rn).s2);
@@ -214,6 +217,7 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
   }
   return;
 }
+
 
 /**************************************************************
  *
