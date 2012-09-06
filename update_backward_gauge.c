@@ -25,6 +25,7 @@
 #include "su3.h"
 #include "update_backward_gauge.h"
 
+extern int * myarray, * myarray2;
 
 #if defined _USE_HALFSPINOR
 void update_backward_gauge(su3 ** const gf) {
@@ -58,6 +59,25 @@ void update_backward_gauge(su3 ** const gf) {
     _su3_assign(g_gauge_field_copy[1][ix][2], gf[kb][2]);
     kb = g_idn[ g_eo2lexic[ix] ][3];
     _su3_assign(g_gauge_field_copy[1][ix][3], gf[kb][3]);
+
+    kb = g_idn[ myarray2[iy] ][0];
+    _su3_assign(g_gauge_field_copy[2][ix][0], gf[kb][0]);
+    kb = g_idn[ myarray2[iy] ][1];
+    _su3_assign(g_gauge_field_copy[2][ix][1], gf[kb][1]);
+    kb = g_idn[ myarray2[iy] ][2];
+    _su3_assign(g_gauge_field_copy[2][ix][2], gf[kb][2]);
+    kb = g_idn[ myarray2[iy] ][3];
+    _su3_assign(g_gauge_field_copy[2][ix][3], gf[kb][3]);
+
+    kb = g_idn[ myarray2[ix] ][0];
+    _su3_assign(g_gauge_field_copy[3][ix][0], gf[kb][0]);
+    kb = g_idn[ myarray2[ix] ][1];
+    _su3_assign(g_gauge_field_copy[3][ix][1], gf[kb][1]);
+    kb = g_idn[ myarray2[ix] ][2];
+    _su3_assign(g_gauge_field_copy[3][ix][2], gf[kb][2]);
+    kb = g_idn[ myarray2[ix] ][3];
+    _su3_assign(g_gauge_field_copy[3][ix][3], gf[kb][3]);
+
   }
 
 #ifdef OMP

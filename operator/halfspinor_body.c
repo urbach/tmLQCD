@@ -67,21 +67,12 @@ __alignx(32, s);
 #ifndef OMP  
 s = k;
 _prefetch_spinor(s);
-if(ieo == 0) {
-  U = g_gauge_field_copy[0][0];
- }
- else {
-   U = g_gauge_field_copy[1][0];
- }
+U = g_gauge_field_copy[ieo][0];
 _prefetch_su3(U);
 #else
-if(ieo == 0) {
-  u0 = g_gauge_field_copy[0][0];
- }
- else {
-   u0 = g_gauge_field_copy[1][0];
- }
+u0 = g_gauge_field_copy[ieo][0];
 #endif
+
 #if (defined SSE2 || defined SSE3)
 g_sloppy_precision = 0;
 #endif
@@ -158,17 +149,17 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #ifndef OMP
   s = l;
   if(ieo == 0) {
-    U = g_gauge_field_copy[1][0];
+    U = g_gauge_field_copy[3][0];
   }
   else {
-    U = g_gauge_field_copy[0][0];
+    U = g_gauge_field_copy[2][0];
   }
 #else
   if(ieo == 0) {
-    u0 = g_gauge_field_copy[1][0];
+    u0 = g_gauge_field_copy[3][0];
   }
   else {
-    u0 = g_gauge_field_copy[0][0];
+    u0 = g_gauge_field_copy[2][0];
   }
 #endif
   

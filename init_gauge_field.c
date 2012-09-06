@@ -70,33 +70,39 @@ int init_gauge_field(const int V, const int back) {
     /*
       g_gauge_field_copy[ieo][PM][sites/2][mu]
     */
-    if((void*)(g_gauge_field_copy = (su3***)calloc(2, sizeof(su3**))) == NULL) {
+    if((void*)(g_gauge_field_copy = (su3***)calloc(4, sizeof(su3**))) == NULL) {
       printf ("malloc errno : %d\n",errno); 
       errno = 0;
       return(3);
     }
-    if((void*)(g_gauge_field_copy[0] = (su3**)calloc(VOLUME, sizeof(su3*))) == NULL) {
+    if((void*)(g_gauge_field_copy[0] = (su3**)calloc(2*VOLUME, sizeof(su3*))) == NULL) {
       printf ("malloc errno : %d\n",errno); 
       errno = 0;
       return(3);
     }
     g_gauge_field_copy[1] = g_gauge_field_copy[0] + (VOLUME)/2;
-    if((void*)(gauge_field_copy = (su3*)calloc(4*(VOLUME)+1, sizeof(su3))) == NULL) {
+    g_gauge_field_copy[2] = g_gauge_field_copy[1] + (VOLUME)/2;
+    g_gauge_field_copy[3] = g_gauge_field_copy[2] + (VOLUME)/2;
+    if((void*)(gauge_field_copy = (su3*)calloc(8*(VOLUME)+1, sizeof(su3))) == NULL) {
       printf ("malloc errno : %d\n",errno); 
       errno = 0;
       return(4);
     }
-#    if (defined SSE || defined SSE2 || defined SSE3)
     g_gauge_field_copy[0][0] = (su3*)(((unsigned long int)(gauge_field_copy)+ALIGN_BASE)&~ALIGN_BASE);
-#    else
-    g_gauge_field_copy[0][0] = gauge_field_copy;
-#    endif
     for(i = 1; i < (VOLUME)/2; i++) {
       g_gauge_field_copy[0][i] = g_gauge_field_copy[0][i-1]+4;
     }
     g_gauge_field_copy[1][0] = g_gauge_field_copy[0][0] + 2*VOLUME; 
     for(i = 1; i < (VOLUME)/2; i++) {
       g_gauge_field_copy[1][i] = g_gauge_field_copy[1][i-1]+4;
+    }
+    g_gauge_field_copy[2][0] = g_gauge_field_copy[1][0] + 2*VOLUME; 
+    for(i = 1; i < (VOLUME)/2; i++) {
+      g_gauge_field_copy[2][i] = g_gauge_field_copy[2][i-1]+4;
+    }
+    g_gauge_field_copy[3][0] = g_gauge_field_copy[2][0] + 2*VOLUME; 
+    for(i = 1; i < (VOLUME)/2; i++) {
+      g_gauge_field_copy[3][i] = g_gauge_field_copy[3][i-1]+4;
     }
   }
 #  elif defined _USE_TSPLITPAR
