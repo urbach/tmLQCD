@@ -45,10 +45,79 @@ halfspinor32 *** NBPointer32;
 int innerV, surfaceV;
 int * myarray, *myarray2;
 
+inline int eo(const int i) {
+  return(g_lexic2eosub[i]);
+}
+inline int bodysurface(const int j) {
+  int t = j/(LX*LY*LZ);
+  int x = (j-t*(LX*LY*LZ))/(LY*LZ);
+  int y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
+  int z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
+  int even = (z+t+x+y+g_proc_coords[0]*T + g_proc_coords[1]*LX + 
+	      g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2;
+  int ret = 0;
+  int body = (T-2)*(LZ-2)*(LY-2)*(LX-2);
+  if(_IS_BODY) {
+    ret = (z-1)+(LZ-2)*((y-1) + (LY-2)*((x-1) + (LX-2)*(t-1)));
+  }
+  else {
+    ret = body;
+    if(t == 0) {
+      ret += z+LZ*(y + LY*x);
+    }
+    else if(t == T-1) {
+      ret += z+LZ*(y + LY*(x + LX));
+    }
+    else if(x == 0) {
+      ret += 2*LX*LY*LZ + z + LZ*(y + LY*(t-1));
+    }
+    else if(x == LX-1) {
+      ret += 2*LX*LY*LZ + z + LZ*(y + LY*((t-1) + (T-2)));
+    }
+    else if(y == 0) {
+      ret += 2*LX*LY*LZ + 2*LY*LZ*(T-2) + z + LZ*((x-1)+(LX-2)*(t-1));
+    }
+    else if(y == LY-1) {
+      ret += 2*LX*LY*LZ + 2*LY*LZ*(T-2) + z + LZ*((x-1)+(LX-2)*((t-1) +(T-2)));
+    }
+    else if(z == 0) {
+      ret += 2*LX*LY*LZ + 2*LY*LZ*(T-2) + LZ*(LX-2)*(T-2) + (y-1) + (LY-2)*((x-1) + (LX-2)*(t-1));
+    }
+    else {
+      ret += 2*LX*LY*LZ + 2*LY*LZ*(T-2) + LZ*(LX-2)*(T-2) + (y-1) + (LY-2)*((x-1) + (LX-2)*((t-1)+(T-2)));
+    }
+  }
+  if(g_proc_id == -1) {
+    printf("%d %d (%d, %d, %d, %d) %d %d\n", j, ret, t, x, y, z, _IS_BODY, body);
+  }
+  return(ret/2);
+}
+
+inline int get_coords_eo(const int i, const int ieo, int *t, int *x, int *y, int *z) {
+  int j = g_eo2lexic[i + ((ieo)%2)*(VOLUME+RAND)/2];
+  /* get (t,x,y,z) from j */
+  *t = j/(LX*LY*LZ);
+  *x = (j-(*t)*(LX*LY*LZ))/(LY*LZ);
+  *y = (j-(*t)*(LX*LY*LZ)-(*x)*(LY*LZ))/(LZ);
+  *z = (j-(*t)*(LX*LY*LZ)-(*x)*(LY*LZ) - (*y)*LZ);
+  return(j);
+}
+inline int get_coords_bodysurface(const int i, const int ieo, int *t, int *x, int *y, int *z) {
+  int j = myarray2[i + ((ieo)%2)*(VOLUME+RAND)/2];
+  *t = j/(LX*LY*LZ);
+  *x = (j-(*t)*(LX*LY*LZ))/(LY*LZ);
+  *y = (j-(*t)*(LX*LY*LZ)-(*x)*(LY*LZ))/(LZ);
+  *z = (j-(*t)*(LX*LY*LZ)-(*x)*(LY*LZ) - (*y)*LZ);
+  return(j);
+}  
+
 int init_dirac_halfspinor() {
   int ieo=0, i=0, j=0, k;
-  int x, y, z, t, mu;
-
+  int x, y, z, t, mu, even;
+  int (*lex_to)(const int) = &eo;
+  int (*get_coord)(const int, const int, int *, int *, int *, int *) = &get_coords_eo;
+  //int (*lex_to)(const int) = &bodysurface;
+  //int (*get_coord)(const int, const int, int *, int *, int *, int *) = &get_coords_bodysurface;
 
   myarray = malloc((VOLUME+RAND)*sizeof(int));
   myarray2 = malloc((VOLUME+RAND)*sizeof(int));
@@ -58,24 +127,13 @@ int init_dirac_halfspinor() {
     for(x = 0; x < LX; x++) {
       for(y = 0; y < LY; y++) {
 	for(z = 0; z < LZ; z++) {
-	  if(_IS_BODY) {
-	    myarray[mu] = (z + LZ*(y + LY*(x + LX*t)))/2;
-	    if((z+t+x+y)%2) {
-	      myarray2[ myarray[mu] + (VOLUME+RAND)/2] = (z + LZ*(y + LY*(x + LX*t)));
-	    }
-	    else {
-	      myarray2[ myarray[mu]] = (z + LZ*(y + LY*(x + LX*t)));
-	    }
-	  }
-	  else {
-	    myarray[mu] = (z + LZ*(y + LY*(x + LX*t)))/2;
-	    if((z+t+x+y)%2) {
-	      myarray2[ myarray[mu] + (VOLUME+RAND)/2] = (z + LZ*(y + LY*(x + LX*t)));
-	    }
-	    else {
-	      myarray2[ myarray[mu]] = (z + LZ*(y + LY*(x + LX*t)));
-	    }
-	  }
+	  // mu is the lexicographical index
+	  // myarray[mu] gives point mu in the new even/odd order used in phi
+	  // myarray2[myarray[mu] + even*(VOLUME+RAND)/2] projects back to lexicographical order
+	  even = (z+t+x+y+g_proc_coords[0]*T + g_proc_coords[1]*LX + 
+		  g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2;
+	  myarray[mu] = lex_to(mu);
+	  myarray2[ myarray[mu] + even*(VOLUME+RAND)/2] = mu;
 	  mu++;
 	}
       }
@@ -111,12 +169,7 @@ int init_dirac_halfspinor() {
 
   for(ieo = 0; ieo < 2; ieo++) {
     for(i = 0; i < VOLUME/2; i++) {
-      j = g_eo2lexic[i + ((ieo+1)%2)*(VOLUME+RAND)/2];
-      /* get (t,x,y,z) from j */
-      t = j/(LX*LY*LZ);
-      x = (j-t*(LX*LY*LZ))/(LY*LZ);
-      y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
-      z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
+      j = get_coords_eo(i, ieo+1, &t, &x, &y, &z);
 #ifndef MPI
       for(mu = 0; mu < 4; mu++) {
 	NBPointer[ieo][8*i + 2*mu + 0] = &HalfSpinor[ 8*g_lexic2eosub[ g_idn[j][mu] ] + 2*mu + 0];
@@ -199,13 +252,8 @@ int init_dirac_halfspinor() {
   }
   for(ieo = 2; ieo < 4; ieo++) {
     for(i = 0; i < VOLUME/2; i++) {
-      //j = g_eo2lexic[i + ((ieo+0)%2)*(VOLUME+RAND)/2];
-      j = myarray2[i + (ieo%2)*(VOLUME+RAND)/2];
-      /* get (t,x,y,z) from j */
-      t = j/(LX*LY*LZ);
-      x = (j-t*(LX*LY*LZ))/(LY*LZ);
-      y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
-      z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
+      j = get_coord(i, ieo, &t, &x, &y, &z);
+      if(g_proc_id == 0) printf("%d %d \n", i, _IS_BODY);
       for(mu = 0; mu < 8; mu++) {
 	NBPointer[ieo][8*i + mu] = &HalfSpinor[8*i + mu];
       }
