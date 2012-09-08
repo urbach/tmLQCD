@@ -425,7 +425,6 @@ void xchange_halffield() {
 void wait_halffield() {
 #  ifdef MPI
   MPI_Waitall(reqcount, requests, hstatus); 
-  if(g_proc_id == 0) printf("waited...\n");
 #  endif /* MPI */
   return;
 }

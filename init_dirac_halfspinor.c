@@ -91,7 +91,7 @@ inline int bodysurface(const int j) {
       ret += 2*LX*LY*LZ + 2*LY*LZ*(T-2) + 2*LZ*(LX-2)*(T-2) + (y-1) + (LY-2)*((x-1) + (LX-2)*((t-1)+(T-2)));
     }
   }
-  if(g_proc_id == 0 && ret/2 == 115) {
+  if(g_proc_id == -1) {
     printf("%d %d (%d, %d, %d, %d) %d %d\n", j, ret, t, x, y, z, _IS_BODY, body);
   }
   return(ret/2);
