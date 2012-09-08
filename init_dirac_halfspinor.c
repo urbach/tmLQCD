@@ -42,7 +42,7 @@ halfspinor32 ** NBPointer32_;
 halfspinor32 * HalfSpinor32_;
 halfspinor32 * HalfSpinor32 ALIGN;
 halfspinor32 *** NBPointer32;
-int innerV, surfaceV;
+int bodyV, surfaceV;
 int * myarray, *myarray2;
 
 inline int eo(const int i) {
@@ -59,6 +59,8 @@ inline int bodysurface(const int j) {
 	      g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2;
   int ret = 0;
   int body = (T-2)*(LZ-2)*(LY-2)*(LX-2);
+  bodyV = body;
+  surfaceV = VOLUME-bodyV;
   if(_IS_BODY) {
     ret = (z-1)+(LZ-2)*((y-1) + (LY-2)*((x-1) + (LX-2)*(t-1)));
   }
@@ -129,6 +131,8 @@ int init_dirac_halfspinor() {
   myarray = malloc((VOLUME+RAND)*sizeof(int));
   myarray2 = malloc((VOLUME+RAND)*sizeof(int));
   ta = calloc((VOLUME+RAND), sizeof(int));
+  bodyV = (T-2)*(LZ-2)*(LY-2)*(LX-2)/2;
+  surfaceV = VOLUME/2-bodyV;
 
   mu = 0;
   for(t = 0; t < T; t++) {

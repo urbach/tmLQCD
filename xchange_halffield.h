@@ -21,5 +21,6 @@
 
 void init_xchange_halffield();
 void xchange_halffield();
+void wait_halffield();
 void xchange_halffield32();
 #endif

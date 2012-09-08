@@ -323,21 +323,25 @@ void xchange_halffield() {
 
 # else /* _INDEX_INDEP_GEOM */
 
+#ifdef MPI
+MPI_Request requests[16];
+MPI_Status hstatus[16];
+int reqcount;
+#endif
+
 /* 4. */
 void xchange_halffield() {
 
 #  ifdef MPI
 
-  MPI_Request requests[16];
-  MPI_Status status[16];
 #  ifdef PARALLELT
-  int reqcount = 4;
+  reqcount = 4;
 #  elif defined PARALLELXT
-  int reqcount = 8;
+  reqcount = 8;
 #  elif defined PARALLELXYT
-  int reqcount = 12;
+  reqcount = 12;
 #  elif defined PARALLELXYZT
-  int reqcount = 16;
+  reqcount = 16;
 #  endif
 #  if (defined XLC && defined BGL)
   __alignx(16, HalfSpinor);
@@ -350,72 +354,80 @@ void xchange_halffield() {
   /* recieve the data from the neighbour on the left in t direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_up, 81, g_cart_grid, &requests[0]);
-	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_dn, 81, g_cart_grid, &requests[1]);
-
+  
   /* send the data to the neighbour on the left in t direction */
   /* recieve the data from the neighbour on the right in t direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_dn, 82, g_cart_grid, &requests[2]);
-	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_up, 82, g_cart_grid, &requests[3]);
-
+  
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
-
+  
   /* send the data to the neighbour on the right in x direction */
   /* recieve the data from the neighbour on the left in x direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ), T*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_x_up, 91, g_cart_grid, &requests[4]);
-	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ/2), T*LY*LZ*12/2, MPI_DOUBLE,
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ/2), T*LY*LZ*12/2, MPI_DOUBLE,
 	    g_nb_x_dn, 91, g_cart_grid, &requests[5]);
-
+  
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */  
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ/2), T*LY*LZ*12/2, MPI_DOUBLE,
  	    g_nb_x_dn, 92, g_cart_grid, &requests[6]);
-	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ), T*LY*LZ*12/2, MPI_DOUBLE,
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ), T*LY*LZ*12/2, MPI_DOUBLE,
  	    g_nb_x_up, 92, g_cart_grid, &requests[7]);
 #    endif
-    
+  
 #    if (defined PARALLELXYT || defined PARALLELXYZT)
-    /* send the data to the neighbour on the right in y direction */
-    /* recieve the data from the neighbour on the left in y direction */
+  /* send the data to the neighbour on the right in y direction */
+  /* recieve the data from the neighbour on the left in y direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ), T*LX*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_y_up, 101, g_cart_grid, &requests[8]);
-	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2), T*LX*LZ*12/2, MPI_DOUBLE, 
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2), T*LX*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_y_dn, 101, g_cart_grid, &requests[9]);
-
-    /* send the data to the neighbour on the leftt in y direction */
-    /* recieve the data from the neighbour on the right in y direction */
+  
+  /* send the data to the neighbour on the leftt in y direction */
+  /* recieve the data from the neighbour on the right in y direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2), T*LX*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_y_dn, 102, g_cart_grid, &requests[10]);
-	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ), T*LX*LZ*12/2, MPI_DOUBLE, 
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ), T*LX*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_y_up, 102, g_cart_grid, &requests[11]);
 #    endif
-    
+  
 #    if (defined PARALLELXYZT)
   /* send the data to the neighbour on the right in z direction */
   /* recieve the data from the neighbour on the left in z direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ), 
 	    T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_up, 503, g_cart_grid, &requests[12]);
-	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2), 
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2), 
 	    T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_dn, 503, g_cart_grid, &requests[13]); 
-
+  
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
   MPI_Isend((void*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2), 
 	    12*T*LX*LY/2, MPI_DOUBLE, g_nb_z_dn, 504, g_cart_grid, &requests[14]);
-	 MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ), 
+  MPI_Irecv((void*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ), 
 	    T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_up, 504, g_cart_grid, &requests[15]); 
 #    endif
 
-  MPI_Waitall(reqcount, requests, status); 
+  //MPI_Waitall(reqcount, requests, hstatus); 
 #  endif /* MPI */
   return;
 
 #ifdef _KOJAK_INST
 #pragma pomp inst end(xchangehalf)
 #endif
+}
+
+void wait_halffield() {
+#  ifdef MPI
+  MPI_Waitall(reqcount, requests, hstatus); 
+  if(g_proc_id == 0) printf("waited...\n");
+#  endif /* MPI */
+  return;
 }
 
 # endif /* _INDEX_INDEP_GEOM */

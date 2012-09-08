@@ -238,7 +238,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
    ix=0;
 #endif
    /* #pragma ivdep*/
-   for(int i = 0; i < (VOLUME)/2; i++){
+   for(int i = 0; i < VOLUME/2; i++){
 #ifdef OMP
      s=k+i;
      _prefetch_spinor(s);
@@ -328,7 +328,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
    ix = 0;
 #endif
    /* #pragma ivdep */
-   for(int i = 0; i < (VOLUME)/2; i++){
+   for(int i = 0; i < bodyV; i++){
 #ifdef OMP
      ix=i*8;
      U=u0+i*4;
@@ -388,6 +388,86 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
      s++;
 #endif
    }
+
+#ifdef OMP
+#pragma omp single
+   {
+#endif
+     
+#    if (defined MPI && !defined _NO_COMM)
+     wait_halffield();
+#    endif
+     
+#ifdef OMP
+   }
+#endif
+
+
+#ifdef OMP
+#pragma omp for
+#endif
+   /* #pragma ivdep */
+   for(int i = bodyV; i < VOLUME/2; i++){
+#ifdef OMP
+     ix=i*8;
+     U=u0+i*4;
+     _prefetch_su3(U);
+     s=l+i;
+     _prefetch_spinor(s);
+#endif
+#ifdef _TM_SUB_HOP
+     pn=p+i;
+#endif
+     
+     /*********************** direction +0 ************************/
+     _hop_t_p_post();
+     ix++;
+     
+     /*********************** direction -0 ************************/
+     _hop_t_m_post();
+     ix++;
+     U++;
+     
+     /*********************** direction +1 ************************/
+     _hop_x_p_post();
+     ix++;
+     
+     /*********************** direction -1 ************************/
+     _hop_x_m_post();
+     U++;
+     ix++;
+     
+     /*********************** direction +2 ************************/
+     _hop_y_p_post();
+     ix++;
+     
+     /*********************** direction -2 ************************/
+     _hop_y_m_post();
+     U++;
+     ix++;
+     
+     /*********************** direction +3 ************************/
+     _hop_z_p_post();
+     ix++;
+     
+     /*********************** direction -3 ************************/
+     _hop_z_m_post();
+     
+#ifdef _MUL_G5_CMPLX
+     _hop_mul_g5_cmplx_and_store(s);
+#elif defined _TM_SUB_HOP
+     _g5_cmplx_sub_hop_and_g5store(s);
+#else
+     _hop_store_post(s);
+#endif
+     
+#ifndef OMP
+     U++;
+     ix++;
+     s++;
+#endif
+   }
+
  }
 #ifdef _KOJAK_INST
 #pragma pomp inst end(hoppingmatrix)
