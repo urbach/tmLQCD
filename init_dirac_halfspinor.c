@@ -42,6 +42,7 @@ halfspinor32 ** NBPointer32_;
 halfspinor32 * HalfSpinor32_;
 halfspinor32 * HalfSpinor32 ALIGN;
 halfspinor32 *** NBPointer32;
+
 int bodyV, surfaceV;
 int * myarray, *myarray2;
 
@@ -59,8 +60,7 @@ inline int bodysurface(const int j) {
 	      g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2;
   int ret = 0;
   int body = (T-2)*(LZ-2)*(LY-2)*(LX-2);
-  bodyV = body;
-  surfaceV = VOLUME-bodyV;
+  surfaceV = VOLUME-body;
   if(_IS_BODY) {
     ret = (z-1)+(LZ-2)*((y-1) + (LY-2)*((x-1) + (LX-2)*(t-1)));
   }
@@ -269,7 +269,13 @@ int init_dirac_halfspinor() {
   for(ieo = 2; ieo < 4; ieo++) {
     for(i = 0; i < VOLUME/2; i++) {
       j = get_coords_bodysurface(i, ieo, &t, &x, &y, &z);
-      if(g_proc_id == 0) printf("%d %d \n", i, _IS_BODY);
+      if(g_proc_id == -1 && ieo == 3 && _IS_BODY) {
+	printf("%d %d (%d %d %d %d)\n", i, _IS_BODY, t, x, y, z);
+	printf("%d %d %d \n", VOLUME/2,myarray[ g_iup[j][0] ], myarray[ g_idn[j][0] ] );
+	printf("%d %d %d \n", VOLUME/2,myarray[ g_iup[j][1] ], myarray[ g_idn[j][1] ] );
+	printf("%d %d %d \n", VOLUME/2,myarray[ g_iup[j][2] ], myarray[ g_idn[j][2] ] );
+	printf("%d %d %d \n", VOLUME/2,myarray[ g_iup[j][3] ], myarray[ g_idn[j][3] ] );
+      }
       for(mu = 0; mu < 8; mu++) {
 	NBPointer[ieo][8*i + mu] = &HalfSpinor[8*i + mu];
       }
