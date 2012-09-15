@@ -23,9 +23,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#ifdef _USE_SHMEM
-# include <mpp/shmem.h>
-#endif
 #include "global.h"
 #include "su3.h"
 #include "init_dirac_halfspinor.h"
@@ -168,19 +165,11 @@ int init_dirac_halfspinor() {
   NBPointer[2] = NBPointer_ + (16*(VOLUME+RAND)/2);
   NBPointer[3] = NBPointer_ + (24*(VOLUME+RAND)/2);
 
-#ifdef _USE_SHMEM
-  if((coid*)(HalfSpinor_ = (halfspinor*)shmalloc((8*(VOLUME+RAND)+1)*sizeof(halfspinor))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(1);
-  }
-#else
   if((void*)(HalfSpinor_ = (halfspinor*)calloc(8*(VOLUME+RAND)+1, sizeof(halfspinor))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
     return(1);
   }
-#endif
   HalfSpinor = (halfspinor*)(((unsigned long int)(HalfSpinor_)+ALIGN_BASE)&~ALIGN_BASE);
 
   for(ieo = 0; ieo < 2; ieo++) {
@@ -336,19 +325,11 @@ int init_dirac_halfspinor32() {
   NBPointer32[2] = NBPointer32_ + (16*(VOLUME+RAND)/2);
   NBPointer32[3] = NBPointer32_ + (24*(VOLUME+RAND)/2);
 
-#ifdef _USE_SHMEM
-  if((void*)(HalfSpinor32_ = (halfspinor32*)shmalloc((8*(VOLUME+RAND)+1)*sizeof(halfspinor32))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(1);
-  }
-#else
   if((void*)(HalfSpinor32_ = (halfspinor32*)calloc(8*(VOLUME+RAND)+1, sizeof(halfspinor32))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
     return(-1);
   }
-#endif
 
   HalfSpinor32 = (halfspinor32*)(((unsigned long int)(HalfSpinor32_)+ALIGN_BASE)&~ALIGN_BASE);
 
@@ -405,9 +386,6 @@ int init_dirac_halfspinor32() {
       }
 #endif
     }
-#ifdef MPI
-/*     NBPointer32[ieo][4*VOLUME] = NBPointer32[ieo][0];  */
-#endif
   }
   for(ieo = 2; ieo < 4; ieo++) {
     for(i = 0; i < VOLUME/2; i++) {
@@ -453,9 +431,6 @@ int init_dirac_halfspinor32() {
       }
 #endif
     }
-#ifdef MPI
-/*     NBPointer32[ieo][4*VOLUME] = NBPointer32[ieo][0];  */
-#endif
   }
   return(0);
 }
