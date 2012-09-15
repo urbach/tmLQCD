@@ -338,9 +338,6 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 			     j,
 			     &SPIDescriptors[j]);
      }
-     // wait for receive completion
-     while ( recvCounter > 0 );
-     _bgq_msync();
 
 #      else // SPI
      xchange_halffield(); 
@@ -444,7 +441,13 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
      
 #    if (defined MPI && !defined _NO_COMM)
+#      ifdef SPI
+     // wait for receive completion
+     while ( recvCounter > 0 );
+     _bgq_msync();
+#      else
      wait_halffield();
+#      endif
 #    endif
      
 #ifdef OMP
