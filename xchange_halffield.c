@@ -35,9 +35,6 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
-#ifdef _USE_SHMEM
-# include <mpp/shmem.h>
-#endif
 #include "global.h"
 #if (defined XLC && defined BGL)
 #  include "bgl.h"
@@ -48,64 +45,7 @@
 #include "xchange_halffield.h"
 
 #if (defined _USE_HALFSPINOR)
-#if (defined _USE_SHMEM) 
-# include <mpp/shmem.h>
-/* 1. */
-void xchange_halffield() {
-
-#ifdef _KOJAK_INST
-#pragma pomp inst begin(xchangehalf)
-#endif
-#  ifdef MPI
-
-  shmem_barrier_all();
-
-  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ/2), 
-		   (double*)(HalfSpinor + 4*VOLUME),
-                   (LX*LY*LZ*6), g_nb_t_up);
-  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2), 
-		   (double*)(HalfSpinor + 4*VOLUME + LX*LY*LZ/2),
-                   (LX*LY*LZ*6), g_nb_t_dn);
-
-#    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
-  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ/2), 
-		   (double*)(HalfSpinor + 4*VOLUME + LX*LY*LZ),
-                   (T*LY*LZ*6), g_nb_x_up);
-  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ),
-		   (double*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ/2),
-                   (T*LY*LZ*6), g_nb_x_dn);
-
-#    endif
-
-#    if (defined PARALLELXYT || defined PARALLELXYZT)
-  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2),
-		   (double*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ),
-                   (T*LX*LZ*6), g_nb_y_up);
-  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ),
-		   (double*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2),
-                   (T*LX*LZ*6), g_nb_y_dn);
-
-#    endif
-
-#    if (defined PARALLELXYZT)
-  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2),
-		   (double*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ),
-                   (T*LX*LY*6), g_nb_z_up);
-  shmem_double_put((double*)(HalfSpinor + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ),
-		   (double*)(HalfSpinor + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2),
-                   (T*LX*LY*6), g_nb_z_dn);
-
-#    endif
-
-  shmem_barrier_all();
-#  endif /* MPI */
-  return;
-#ifdef _KOJAK_INST
-#pragma pomp inst end(xchangehalf)
-#endif
-}
-
-#elif (defined _PERSISTENT)
+#if (defined _PERSISTENT)
 
 MPI_Request prequests[16];
 
@@ -433,66 +373,6 @@ void wait_halffield() {
 
 #endif /* def (_USE_SHMEM || _PERSISTENT) */ 
 
-#if (defined _USE_SHMEM)
-# include <mpp/shmem.h>
-
-/* 32-1. */
-void xchange_halffield32() {
-
-#ifdef _KOJAK_INST
-#pragma pomp inst begin(xchangehalf32)
-#endif
-#  ifdef MPI
-
-  shmem_barrier_all();
-
-  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ/2), 
-		   (float*)(HalfSpinor32 + 4*VOLUME),
-                   (LX*LY*LZ*6), g_nb_t_up);
-  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2), 
-		   (float*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ/2),
-                   (LX*LY*LZ*6), g_nb_t_dn);
-
-#    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
-  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ/2), 
-		   (float*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ),
-                   (T*LY*LZ*6), g_nb_x_up);
-  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ),
-		   (float*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ + T*LY*LZ/2),
-                   (T*LY*LZ*6), g_nb_x_dn);
-
-#    endif
-
-#    if (defined PARALLELXYT || defined PARALLELXYZT)
-  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2),
-		   (float*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ + T*LY*LZ),
-                   (T*LX*LZ*6), g_nb_y_up);
-  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ),
-		   (float*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ/2),
-                   (T*LX*LZ*6), g_nb_y_dn);
-
-#    endif
-
-#    if (defined PARALLELXYZT)
-  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2),
-		   (float*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ),
-                   (T*LX*LY*6), g_nb_z_up);
-  shmem_float_put((float*)(HalfSpinor32 + 4*VOLUME + RAND/2 + LX*LY*LZ + T*LY*LZ + T*LX*LZ),
-		   (float*)(HalfSpinor32 + 4*VOLUME + LX*LY*LZ + T*LY*LZ + T*LX*LZ + T*LX*LY/2),
-                   (T*LX*LY*6), g_nb_z_dn);
-
-#    endif
-
-  shmem_barrier_all();
-#  endif /* MPI */
-  return;
-#ifdef _KOJAK_INST
-#pragma pomp inst end(xchangehalf32)
-#endif
-}
-
-#else /* (defined _USE_SHMEM) */
-
 # if defined _INDEX_INDEP_GEOM
 // IIG xchange_halffield32 still Missing
 # else // defined _INDEX_INDEP_GEOM
@@ -590,7 +470,6 @@ void xchange_halffield32() {
 #endif
 }
 # endif /* defined _INDEX_INDEP_GEOM */
-#endif /* defined _USE_SHMEM */
 #endif /* defined _USE_HALFSPINOR */
 
 
