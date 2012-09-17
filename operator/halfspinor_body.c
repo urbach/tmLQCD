@@ -133,9 +133,6 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 			    j,
 			    &SPIDescriptors32[j]);
     }
-    // wait for receive completion
-    while ( recvCounter > 0 );
-    _bgq_msync();
 #      else
     xchange_halffield32(); 
 #      endif
