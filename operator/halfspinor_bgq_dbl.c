@@ -1,7 +1,7 @@
 /**********************************************************************
  *
  *
- * Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Carsten Urbach
+ * Copyright (C) 2012 Carsten Urbach
  *
  * BG and halfspinor versions (C) 2007, 2008 Carsten Urbach
  *
@@ -26,13 +26,16 @@
  *
  **********************************************************************/
 
+
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
-  int i, ix;
-  su3 * restrict U ALIGN;
-  spinor * restrict s ALIGN;
+  int ix;
+  su3 * restrict ALIGN U;
+  spinor * restrict ALIGN s;
   halfspinor * restrict * phi ALIGN;
   halfspinor32 * restrict * phi32 ALIGN;
+  /* We have 32 registers available */
   _declare_hregs();
+
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
 #endif
@@ -47,15 +50,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   __alignx(16, l);
   __alignx(16, k);
   if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
-    /* Take the 64 Bit precision part and replace */
-    /* _bgl_load_reg0|1 with _bgl_load_reg0|1_32 */
-    /* _bgl_load_rs0|1|2|3 with _bgl_load_rs0|1|2|3_32*/
-    /* phi with phi32*/
-    /* _bgl_store_reg0|1 with _bgl_store_reg0|1_32 */
-    /* _bgl_store_reg0|1_up with _bgl_store_reg0|1_up_32 */
-    /* HalfSpinor with Halfspinor32 */
-    /* _bgl_load_rs0|1 with _bgl_load_rs0|1_32*/
-    /* xchange_halffield with xchange_halffield_32 */
     __alignx(16, HalfSpinor32);
     /* We will run through the source vector now */
     /* instead of the solution vector            */
@@ -75,8 +69,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _prefetch_su3(U);
     /**************** loop over all lattice sites ******************/
     ix=0;
-    for(i = 0; i < (VOLUME)/2; i++){
-
+    for(int i = 0; i < (VOLUME)/2; i++){
       /*********************** direction +0 ************************/
       _hop_t_p_pre32();
       s++; 
@@ -96,9 +89,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       _hop_x_m_pre32();
       ix++;
 
-
       /*********************** direction +2 ************************/
       _hop_y_p_pre32();
+
       ix++;
       U++;
 
@@ -108,7 +101,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
       /*********************** direction +3 ************************/
       _hop_z_p_pre32();
-      _prefetch_su3(U+1); 
       ix++;
       U++;
 
@@ -130,16 +122,16 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     else {
       U = g_gauge_field_copy[0][0];
     }
-    _prefetch_halfspinor(phi32[0]);
+    //_prefetch_halfspinor(phi32[0]);
     _prefetch_su3(U);
   
     /* Now we sum up and expand to a full spinor */
     ix = 0;
     /*   _prefetch_spinor_for_store(s); */
-    for(i = 0; i < (VOLUME)/2; i++){
+    for(int i = 0; i < (VOLUME)/2; i++){
       /* This causes a lot of trouble, do we understand this? */
       /*     _prefetch_spinor_for_store(s); */
-      _prefetch_halfspinor(phi32[ix+1]);
+      //_prefetch_halfspinor(phi32[ix+1]);
       /*********************** direction +0 ************************/
       _hop_t_p_post32();
       ix++;
@@ -191,7 +183,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _prefetch_su3(U);
     /**************** loop over all lattice sites ******************/
     ix=0;
-    for(i = 0; i < (VOLUME)/2; i++){
+    for(int i = 0; i < (VOLUME)/2; i++){
       /*********************** direction +0 ************************/
       _hop_t_p_pre();
       s++; 
@@ -231,6 +223,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       ix++;
 
       /************************ end of loop ************************/
+
     }
 
 #    if (defined MPI && !defined _NO_COMM)
@@ -238,7 +231,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #    endif
     s = l;
     phi = NBPointer[2 + ieo];
-    _prefetch_halfspinor(phi[0]);
+    //_prefetch_halfspinor(phi[0]);
     if(ieo == 0) {
       U = g_gauge_field_copy[1][0];
     }
@@ -250,8 +243,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     /* Now we sum up and expand to a full spinor */
     ix = 0;
     /*   _prefetch_spinor_for_store(s); */
-    for(i = 0; i < (VOLUME)/2; i++){
+    for(int i = 0; i < (VOLUME)/2; i++){
       /* This causes a lot of trouble, do we understand this? */
+      /*     _prefetch_spinor_for_store(s); */
+      //_prefetch_halfspinor(phi[ix+1]);
       /*********************** direction +0 ************************/
       _hop_t_p_post();
       ix++;
@@ -287,4 +282,3 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #pragma pomp inst end(hoppingmatrix)
 #endif
 }
-
