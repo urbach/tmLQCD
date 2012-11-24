@@ -1569,6 +1569,8 @@ int bodysurface(const int j) {
   ret = (z)+(LZ)*((y) + (LY)*((x-1) + (LX-2)*(t-1)));
 #elif defined PARALLELT
   ret = (z)+(LZ)*((y) + (LY)*((x) + (LX)*(t-1)));
+#else
+  ret = z+(LZ)*(y + (LY)*(x + (LX)*t));
 #endif
   if( !(_IS_BODY) ) {
 #ifdef PARALLELXYZT
