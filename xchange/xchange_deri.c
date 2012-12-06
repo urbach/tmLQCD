@@ -87,7 +87,8 @@ void xchange_deri(su3adj ** const df)
     }
   }
 
-  /* send the data to the neighbour on the right is not needed*/
+  /* send the data to the neighbour on the right is needed for the */
+  /* clover case, so this needs fixing here! */
 #    endif /* (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT ) */
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ )
 
@@ -114,7 +115,8 @@ void xchange_deri(su3adj ** const df)
       }
     }
   }
-  /* send the data to the neighbour on the right is not needed*/  
+  /* send the data to the neighbour on the right is needed for the */
+  /* clover case, so this needs fixing here! */
 #    endif /* (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ ) */
 
 #    if (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ )
@@ -143,7 +145,8 @@ void xchange_deri(su3adj ** const df)
       }
     }
   }
-  /* send the data to the neighbour on the right is not needed*/  
+  /* send the data to the neighbour on the right is needed for the */
+  /* clover case, so this needs fixing here! */
 #    endif /* (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ ) */
 
 #    if (defined PARALLELXYZT || defined PARALLELXYZ )
@@ -172,7 +175,8 @@ void xchange_deri(su3adj ** const df)
       }
     }
   }
-  /* send the data to the neighbour on the right is not needed*/  
+  /* send the data to the neighbour on the right is needed for the */
+  /* clover case, so this needs fixing here! */
 #    endif /* (defined PARALLELXYZT || defined PARALLELXYZ ) */
 #  endif /* MPI */
   return;
@@ -412,7 +416,7 @@ void xchange_deri(su3adj ** const df)
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
   /* zy-edge */
-  MPI_Sendrecv((void*)df[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY + 2*LY*LZ], 
+  MPI_Sendrecv((void*)df[VOLUME + RAND + 4*LY*LZ + 4*T*LZ + 4*LX*LZ + 4*T*LY + 4*LX*LY + 2*T*LX], 
 	       1, deri_zy_edge_cont, g_nb_y_dn, 502,
 	       (void*)ddummy[0],
 	       1, deri_zy_edge_cont, g_nb_y_up, 502, 
@@ -588,7 +592,7 @@ void xchange_deri(su3adj ** const df)
       }
     }
   }
-  /* send the data to the neighbour on the right is not needed*/  
+  /* send the data to the neighbour on the right needed for clover */  
 
   MPI_Sendrecv((void*)df[VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ], 
 	       1, deri_z_slice_cont, g_nb_z_up, 47,
