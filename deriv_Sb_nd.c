@@ -615,7 +615,6 @@ void deriv_Sb_nd_trace(su3 ** tempU, hamiltonian_field_t * const hf, const doubl
 #pragma omp for
 #endif
   for(int ix = 0; ix < VOLUME; ix++){
-    
     u = &hf->gaugefield[ix][0];
     _su3_times_su3d(v2,*u,tempU[ix][0]);
     _complex_times_su3(v1, ka0, v2);
@@ -636,6 +635,112 @@ void deriv_Sb_nd_trace(su3 ** tempU, hamiltonian_field_t * const hf, const doubl
     _complex_times_su3(v1, ka3, v2);
     _trace_lambda_mul_add_assign(hf->derivative[ix][3], 2.*factor, v1);
   }
+
+  // The boundaries in case of MPI (only the left/minus direction ones)
+#ifdef MPI
+#  ifdef OMP
+#    pragma omp for
+#  endif
+  for(int ix = VOLUME + LX*LY*LZ; ix < VOLUME + 2*LX*LY*LZ; ix++){
+    u = &hf->gaugefield[ix][0];
+    _su3_times_su3d(v2,*u,tempU[ix][0]);
+    _complex_times_su3(v1, ka0, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][0], 2.*factor, v1);
+
+    u = &hf->gaugefield[ix][1];
+    _su3_times_su3d(v2,*u,tempU[ix][1]);
+    _complex_times_su3(v1, ka1, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][1], 2.*factor, v1);
+
+    u = &hf->gaugefield[ix][2];
+    _su3_times_su3d(v2,*u,tempU[ix][2]);
+    _complex_times_su3(v1, ka2, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][2], 2.*factor, v1);
+
+    u = &hf->gaugefield[ix][3];
+    _su3_times_su3d(v2,*u,tempU[ix][3]);
+    _complex_times_su3(v1, ka3, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][3], 2.*factor, v1);
+  }
+#  if (defined PARALLELXYZT || defined PARALLELXYT || defined PARALLELXT)
+#  ifdef OMP
+#    pragma omp for
+#  endif
+  for(int ix = VOLUME + 2*LX*LY*LZ + T*LY*LZ; ix < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ; ix++){
+    u = &hf->gaugefield[ix][0];
+    _su3_times_su3d(v2,*u,tempU[ix][0]);
+    _complex_times_su3(v1, ka0, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][0], 2.*factor, v1);
+
+    u = &hf->gaugefield[ix][1];
+    _su3_times_su3d(v2,*u,tempU[ix][1]);
+    _complex_times_su3(v1, ka1, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][1], 2.*factor, v1);
+
+    u = &hf->gaugefield[ix][2];
+    _su3_times_su3d(v2,*u,tempU[ix][2]);
+    _complex_times_su3(v1, ka2, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][2], 2.*factor, v1);
+
+    u = &hf->gaugefield[ix][3];
+    _su3_times_su3d(v2,*u,tempU[ix][3]);
+    _complex_times_su3(v1, ka3, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][3], 2.*factor, v1);
+  }
+#  endif
+#  if (defined PARALLELXYZT || defined PARALLELXYT)
+#  ifdef OMP
+#    pragma omp for
+#  endif
+  for(int ix = VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ; ix < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ; ix++){
+    u = &hf->gaugefield[ix][0];
+    _su3_times_su3d(v2,*u,tempU[ix][0]);
+    _complex_times_su3(v1, ka0, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][0], 2.*factor, v1);
+
+    u = &hf->gaugefield[ix][1];
+    _su3_times_su3d(v2,*u,tempU[ix][1]);
+    _complex_times_su3(v1, ka1, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][1], 2.*factor, v1);
+
+    u = &hf->gaugefield[ix][2];
+    _su3_times_su3d(v2,*u,tempU[ix][2]);
+    _complex_times_su3(v1, ka2, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][2], 2.*factor, v1);
+
+    u = &hf->gaugefield[ix][3];
+    _su3_times_su3d(v2,*u,tempU[ix][3]);
+    _complex_times_su3(v1, ka3, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][3], 2.*factor, v1);
+  }
+#  endif
+#  if (defined PARALLELXYZT)
+#  ifdef OMP
+#    pragma omp for
+#  endif
+  for(int ix = VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + T*LX*LY; ix < VOLUME + 2*LX*LY*LZ + 2*T*LY*LZ + 2*T*LX*LZ + 2*T*LX*LY; ix++){
+    u = &hf->gaugefield[ix][0];
+    _su3_times_su3d(v2,*u,tempU[ix][0]);
+    _complex_times_su3(v1, ka0, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][0], 2.*factor, v1);
+
+    u = &hf->gaugefield[ix][1];
+    _su3_times_su3d(v2,*u,tempU[ix][1]);
+    _complex_times_su3(v1, ka1, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][1], 2.*factor, v1);
+
+    u = &hf->gaugefield[ix][2];
+    _su3_times_su3d(v2,*u,tempU[ix][2]);
+    _complex_times_su3(v1, ka2, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][2], 2.*factor, v1);
+
+    u = &hf->gaugefield[ix][3];
+    _su3_times_su3d(v2,*u,tempU[ix][3]);
+    _complex_times_su3(v1, ka3, v2);
+    _trace_lambda_mul_add_assign(hf->derivative[ix][3], 2.*factor, v1);
+  }
+#  endif
+#endif
 
 #ifdef OMP
   } /* OpenMP closing brace */

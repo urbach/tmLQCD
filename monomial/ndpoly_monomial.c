@@ -134,9 +134,6 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
       	    g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], EO);
       
       /* \delta M_eo sandwitched by  chi[j-1]_e^\dagger  and  chi[2N-j]_o */
-      //deriv_Sb_nd(EO,  mnl->w_fields[0],  mnl->w_fields[1], 
-      //	  g_chi_up_spinor_field[phmc_dop_n_cheby], g_chi_dn_spinor_field[phmc_dop_n_cheby], 
-      //	  hf, mnl->forcefactor);
       deriv_Sb_nd_tensor(tempU, EO, mnl->w_fields[0],  mnl->w_fields[1], 
 			 g_chi_up_spinor_field[phmc_dop_n_cheby], g_chi_dn_spinor_field[phmc_dop_n_cheby]);
 
@@ -145,9 +142,6 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
       	    g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], EO);
       
       /* \delta M_oe sandwitched by  chi[j-1]_o^\dagger  and  chi[2N-j]_e */
-      //deriv_Sb_nd(OE, g_chi_up_spinor_field[j-1],  g_chi_dn_spinor_field[j-1],
-      //	  mnl->w_fields[0], mnl->w_fields[1], 
-      //	  hf, mnl->forcefactor);
       deriv_Sb_nd_tensor(tempU, OE, g_chi_up_spinor_field[j-1],  g_chi_dn_spinor_field[j-1],
 			 mnl->w_fields[0], mnl->w_fields[1]);
 
