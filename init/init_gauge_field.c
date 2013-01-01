@@ -56,11 +56,7 @@ int init_gauge_field(const int V, const int back) {
     errno = 0;
     return(2);
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
   g_gauge_field[0] = (su3*)(((unsigned long int)(gauge_field)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  g_gauge_field[0] = gauge_field;
-#endif
   for(i = 1; i < V; i++){
     g_gauge_field[i] = g_gauge_field[i-1]+4;
   }

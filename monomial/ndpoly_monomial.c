@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <errno.h>
 #include "global.h"
 #include "su3.h"
 #include "linalg_eo.h"
@@ -32,6 +33,7 @@
 #include "gettime.h"
 #include "solver/solver.h"
 #include "deriv_Sb.h"
+#include "deriv_Sb_nd.h"
 #include "operator/tm_operators.h"
 #include "chebyshev_polynomial.h"
 #include "operator/tm_operators_nd.h"
@@ -59,15 +61,42 @@ extern int phmc_exact_poly;
  *
  ********************************************/
 
+su3 * _tempU = NULL;
+su3 ** tempU = NULL;
+
 void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
-  double atime, etime;
+  double atime, etime, qtime=0., q2time=0., dtime=0., tmp, tmp2;
   int j, k;
   monomial * mnl = &monomial_list[id];
   atime = gettime();
-  /* This factor 2 a missing factor 2 in trace_lambda */
+  static int temp_field_init = 0;
   ndpoly_set_global_parameter(mnl, phmc_exact_poly);
   mnl->forcefactor = -phmc_Cpol*mnl->EVMaxInv;
   /* Recall:  The GAMMA_5 left of  delta M_eo  is done in  deriv_Sb !!! */
+  if(!temp_field_init) {
+    temp_field_init = 1;
+    if((void*)(tempU = (su3**)calloc(VOLUMEPLUSRAND, sizeof(su3*))) == NULL) {
+      printf ("malloc errno for tempU in ndpoly_derivative: %d\n",errno); 
+      errno = 0;
+      return;
+    }
+    if((void*)(_tempU = (su3*)calloc(4*VOLUMEPLUSRAND+1, sizeof(su3))) == NULL) {
+      printf ("malloc errno for _tempU in ndpoly_derivative: %d\n",errno); 
+      errno = 0;
+      return;
+    }
+    tempU[0] = (su3*)(((unsigned long int)(_tempU)+ALIGN_BASE)&~ALIGN_BASE);
+    for(int i = 1; i < VOLUMEPLUSRAND; i++){
+      tempU[i] = tempU[i-1]+4;
+    }
+  }
+
+    for(int i = 0; i < VOLUMEPLUSRAND; i++) {
+      for(int mu = 0; mu < 4; mu++) {
+	_su3_zero(tempU[i][mu]);
+      }
+    }
+
 
   if (g_epsbar!=0.0 || phmc_exact_poly==0){
     /* Here comes the definitions for the chi_j fields */
@@ -78,13 +107,13 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
 
     assign(g_chi_up_spinor_field[0], mnl->pf, VOLUME/2);
     assign(g_chi_dn_spinor_field[0], mnl->pf2, VOLUME/2);
-
+    tmp = gettime();
     for(k = 1; k < (mnl->MDPolyDegree-1); k++) {
       Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], 
 			     g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], 
 			     mnl->MDPolyRoots[k-1]);
     }
-    
+    qtime += (gettime() - tmp);
     /* Here comes the remaining fields  chi_k ; k=n,...,2n-1  */
     /*They are evaluated step-by-step overwriting the same field (mnl->MDPolyDegree)*/
     
@@ -92,29 +121,39 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
     assign(g_chi_dn_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree-2], VOLUME/2);
     
     for(j=(mnl->MDPolyDegree-1); j>=1; j--) {
+      tmp = gettime();
       assign(g_chi_up_spinor_field[mnl->MDPolyDegree-1], g_chi_up_spinor_field[mnl->MDPolyDegree], VOLUME/2);
       assign(g_chi_dn_spinor_field[mnl->MDPolyDegree-1], g_chi_dn_spinor_field[mnl->MDPolyDegree], VOLUME/2);
-      
       Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], 
 			     g_chi_up_spinor_field[mnl->MDPolyDegree-1], g_chi_dn_spinor_field[mnl->MDPolyDegree-1], 
 			     mnl->MDPolyRoots[2*mnl->MDPolyDegree-3-j]);
-      
+      tmp2 = gettime();
+      q2time += (tmp2 - tmp);
       /* Get the even parts of the  (j-1)th  chi_spinors */
       H_eo_tm_ndpsi(mnl->w_fields[0], mnl->w_fields[1], 
-		    g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], EO);
+      	    g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], EO);
       
       /* \delta M_eo sandwitched by  chi[j-1]_e^\dagger  and  chi[2N-j]_o */
-      deriv_Sb(EO, mnl->w_fields[0], g_chi_up_spinor_field[phmc_dop_n_cheby], hf, mnl->forcefactor);/* UP */
-      deriv_Sb(EO, mnl->w_fields[1], g_chi_dn_spinor_field[phmc_dop_n_cheby], hf, mnl->forcefactor);/* DN */
-      
+      //deriv_Sb_nd(EO,  mnl->w_fields[0],  mnl->w_fields[1], 
+      //	  g_chi_up_spinor_field[phmc_dop_n_cheby], g_chi_dn_spinor_field[phmc_dop_n_cheby], 
+      //	  hf, mnl->forcefactor);
+      deriv_Sb_nd_tensor(tempU, EO, mnl->w_fields[0],  mnl->w_fields[1], 
+			 g_chi_up_spinor_field[phmc_dop_n_cheby], g_chi_dn_spinor_field[phmc_dop_n_cheby]);
+
       /* Get the even parts of the  (2N-j)-th  chi_spinors */
       H_eo_tm_ndpsi(mnl->w_fields[0], mnl->w_fields[1], 
-		    g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], EO);
+      	    g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], EO);
       
       /* \delta M_oe sandwitched by  chi[j-1]_o^\dagger  and  chi[2N-j]_e */
-      deriv_Sb(OE, g_chi_up_spinor_field[j-1], mnl->w_fields[0], hf, mnl->forcefactor);
-      deriv_Sb(OE, g_chi_dn_spinor_field[j-1], mnl->w_fields[1], hf, mnl->forcefactor);
+      //deriv_Sb_nd(OE, g_chi_up_spinor_field[j-1],  g_chi_dn_spinor_field[j-1],
+      //	  mnl->w_fields[0], mnl->w_fields[1], 
+      //	  hf, mnl->forcefactor);
+      deriv_Sb_nd_tensor(tempU, OE, g_chi_up_spinor_field[j-1],  g_chi_dn_spinor_field[j-1],
+			 mnl->w_fields[0], mnl->w_fields[1]);
+
+      dtime += (gettime() - tmp2);
     }
+    deriv_Sb_nd_trace(tempU, hf, mnl->forcefactor);
   } 
   else if(g_epsbar == 0.0) {
     /* Here comes the definitions for the chi_j fields */
@@ -159,7 +198,7 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   */ 
   etime = gettime();
   if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+    printf("# Time for %s monomial derivative: %e s %e %e %e\n", mnl->name, etime-atime, qtime, q2time, dtime);
   }
   return;
 }
@@ -314,7 +353,7 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
     }
     
     /* Here comes the loop for the evaluation of A, A^2, ...  */
-    for(j = 1; j < 8; j++){ /* To omit corrections just set  j<1 */
+    for(j = 1; j < 1; j++){ /* To omit corrections just set  j<1 */
       
       if(j % 2){ /*  Chi[j] = ( Qdag P  Ptilde ) Chi[j-1]  */ 
 	Ptilde_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
@@ -473,7 +512,7 @@ int init_ndpoly_monomial(const int id) {
   if((g_proc_id == 0) && (g_debug_level > 1)) {
     printf("# monomial %s approximation interval [stilde_min, stilde_max] = [%e, %e]\n", 
 	   mnl->name, mnl->StildeMin, mnl->StildeMax);
-    printf("# monomial %s degree for P = %d, epsilont = %e, normalisation = %e", 
+    printf("# monomial %s degree for P = %d, epsilont = %e, normalisation = %e\n", 
 	   mnl->name, mnl->MDPolyDegree-1, mnl->EVMin, mnl->EVMaxInv);
   }
 

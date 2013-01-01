@@ -676,6 +676,61 @@ _sse_store_up(r);
   (t).c21 = (u).c2 * conj((v).c1) + (w).c2 * conj((z).c1);	\
   (t).c22 = (u).c2 * conj((v).c2) + (w).c2 * conj((z).c2);
 
+#define _vector_tensor_vector_add_accum(t, u, v, w, z)		\
+  (t).c00 += (u).c0 * conj((v).c0) + (w).c0 * conj((z).c0) ;	\
+  (t).c01 += (u).c0 * conj((v).c1) + (w).c0 * conj((z).c1);	\
+  (t).c02 += (u).c0 * conj((v).c2) + (w).c0 * conj((z).c2);	\
+  (t).c10 += (u).c1 * conj((v).c0) + (w).c1 * conj((z).c0);	\
+  (t).c11 += (u).c1 * conj((v).c1) + (w).c1 * conj((z).c1);	\
+  (t).c12 += (u).c1 * conj((v).c2) + (w).c1 * conj((z).c2);	\
+  (t).c20 += (u).c2 * conj((v).c0) + (w).c2 * conj((z).c0);	\
+  (t).c21 += (u).c2 * conj((v).c1) + (w).c2 * conj((z).c1);	\
+  (t).c22 += (u).c2 * conj((v).c2) + (w).c2 * conj((z).c2);
 
+#if ( defined OMP )
+
+#define _vector_tensor_vector_add_accum_nonlocal(t, u, v, w, z)		\
+  _Pragma("omp atomic")							\
+       creal((t).c00) += creal((u).c0 * conj((v).c0) + (w).c0 * conj((z).c0)) ;	\
+  _Pragma("omp atomic")							\
+       cimag((t).c00) += cimag((u).c0 * conj((v).c0) + (w).c0 * conj((z).c0)) ;	\
+  _Pragma("omp atomic")							\
+       creal((t).c01) += creal((u).c0 * conj((v).c1) + (w).c0 * conj((z).c1)); \
+  _Pragma("omp atomic")							\
+       cimag((t).c01) += cimag((u).c0 * conj((v).c1) + (w).c0 * conj((z).c1)); \
+  _Pragma("omp atomic")							\
+       creal((t).c02) += creal((u).c0 * conj((v).c2) + (w).c0 * conj((z).c2)); \
+  _Pragma("omp atomic")							\
+       cimag((t).c02) += cimag((u).c0 * conj((v).c2) + (w).c0 * conj((z).c2)); \
+  _Pragma("omp atomic")							\
+       creal((t).c10) += creal((u).c1 * conj((v).c0) + (w).c1 * conj((z).c0)); \
+  _Pragma("omp atomic")							\
+       cimag((t).c10) += cimag((u).c1 * conj((v).c0) + (w).c1 * conj((z).c0)); \
+  _Pragma("omp atomic")							\
+       creal((t).c11) += creal((u).c1 * conj((v).c1) + (w).c1 * conj((z).c1)); \
+  _Pragma("omp atomic")							\
+       cimag((t).c11) += cimag((u).c1 * conj((v).c1) + (w).c1 * conj((z).c1)); \
+  _Pragma("omp atomic")							\
+       creal((t).c12) += creal((u).c1 * conj((v).c2) + (w).c1 * conj((z).c2)); \
+  _Pragma("omp atomic")							\
+       cimag((t).c12) += cimag((u).c1 * conj((v).c2) + (w).c1 * conj((z).c2)); \
+  _Pragma("omp atomic")							\
+       creal((t).c20) += creal((u).c2 * conj((v).c0) + (w).c2 * conj((z).c0)); \
+  _Pragma("omp atomic")							\
+       cimag((t).c20) += cimag((u).c2 * conj((v).c0) + (w).c2 * conj((z).c0)); \
+  _Pragma("omp atomic")							\
+       creal((t).c21) += creal((u).c2 * conj((v).c1) + (w).c2 * conj((z).c1)); \
+  _Pragma("omp atomic")							\
+       cimag((t).c21) += cimag((u).c2 * conj((v).c1) + (w).c2 * conj((z).c1)); \
+  _Pragma("omp atomic")							\
+       creal((t).c22) += creal((u).c2 * conj((v).c2) + (w).c2 * conj((z).c2)); \
+  _Pragma("omp atomic")							\
+       cimag((t).c22) += cimag((u).c2 * conj((v).c2) + (w).c2 * conj((z).c2));
+
+#else
+
+#define _vector_tensor_vector_add_accum_nonlocal(t, u, v, w, z) _vector_tensor_vector_add_accum(t, u, v, w, z)
+
+#endif
 
 #endif

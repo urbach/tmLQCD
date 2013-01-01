@@ -47,7 +47,7 @@ MODULES = read_input gamma measure_gauge_action start \
 	invert_eo invert_doublet_eo update_gauge \
 	polyakov_loop getopt sighandler reweighting_factor \
 	source_generation boundary update_tm ranlxd  \
-	mpi_init deriv_Sb deriv_Sb_D_psi ranlxs \
+	mpi_init deriv_Sb deriv_Sb_nd deriv_Sb_D_psi ranlxs \
 	geometry_eo invert_overlap \
 	prepare_source chebyshev_polynomial_nd Ptilde_nd  \
 	reweighting_factor_nd \
