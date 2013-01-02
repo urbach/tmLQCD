@@ -65,7 +65,7 @@ su3 * _tempU = NULL;
 su3 ** tempU = NULL;
 
 void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
-  double atime, etime, qtime=0., q2time=0., dtime=0., tmp, tmp2;
+  double atime, etime, qtime=0., q2time=0., dtime=0., htime = 0., tmp, tmp2;
   int j, k;
   spinor * restrict s_up, * restrict s_dn, * restrict r_up, * restrict r_dn, * restrict t_up, * restrict t_dn;
   monomial * mnl = &monomial_list[id];
@@ -134,22 +134,27 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
       /* Get the even parts of the  (j-1)th  chi_spinors */
       H_eo_tm_ndpsi(mnl->w_fields[0], mnl->w_fields[1], 
       	    g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], EO);
-      
+      /* Get the even parts of the  (2N-j)-th  chi_spinors */
+      H_eo_tm_ndpsi(mnl->w_fields[2], mnl->w_fields[3], r_up, r_dn, EO);
+      //      	    g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], EO);
+
+      tmp = gettime();
+      htime += (tmp - tmp2);
       /* \delta M_eo sandwitched by  chi[j-1]_e^\dagger  and  chi[2N-j]_o */
       deriv_Sb_nd_tensor(tempU, EO, mnl->w_fields[0],  mnl->w_fields[1], 
-			 r_up, r_dn);
-
-      /* Get the even parts of the  (2N-j)-th  chi_spinors */
-      H_eo_tm_ndpsi(mnl->w_fields[0], mnl->w_fields[1], r_up, r_dn, EO);
-      //      	    g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], EO);
+      			 r_up, r_dn);
+      //deriv_Sb_tensor(tempU, EO, mnl->w_fields[0], r_up);
+      //deriv_Sb_tensor(tempU, EO, mnl->w_fields[1], r_dn);
       
       /* \delta M_oe sandwitched by  chi[j-1]_o^\dagger  and  chi[2N-j]_e */
       deriv_Sb_nd_tensor(tempU, OE, g_chi_up_spinor_field[j-1],  g_chi_dn_spinor_field[j-1],
-			 mnl->w_fields[0], mnl->w_fields[1]);
+      			 mnl->w_fields[2], mnl->w_fields[3]);
+      //deriv_Sb_tensor(tempU, OE, g_chi_up_spinor_field[j-1], mnl->w_fields[2]);
+      //deriv_Sb_tensor(tempU, OE, g_chi_dn_spinor_field[j-1], mnl->w_fields[3]);
       t_up = s_up; t_dn = s_dn;
       s_up = r_up; s_dn = r_dn;
       r_up = t_up; r_dn = t_dn;
-      dtime += (gettime() - tmp2);
+      dtime += (gettime() - tmp);
     }
     deriv_Sb_nd_trace(tempU, hf, mnl->forcefactor);
   } 
@@ -192,7 +197,7 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   }
   etime = gettime();
   if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time for %s monomial derivative: %e s %e %e %e\n", mnl->name, etime-atime, qtime, q2time, dtime);
+    printf("# Time for %s monomial derivative: %e s %e %e %e %e\n", mnl->name, etime-atime, qtime, q2time, dtime, htime);
   }
   return;
 }

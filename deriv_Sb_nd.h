@@ -28,5 +28,6 @@ void deriv_Sb_nd_trace(su3 ** tempU, hamiltonian_field_t * const hf, const doubl
 void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo, 
 			spinor * const l0, spinor * const l1,
 			spinor * const k0, spinor * const k1);
-
+void deriv_Sb_tensor(su3 ** tempU, const int ieo, 
+		     spinor * const l, spinor * const k);
 #endif

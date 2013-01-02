@@ -40,6 +40,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <xmmintrin.h>
 #include "global.h"
 #include "su3.h"
 #include "boundary.h"
@@ -360,11 +361,13 @@ void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo,
 #pragma omp parallel
   {
 #endif
+  int * hi;
   int ix,iy;
   int ioff, icx, icy;
   static su3_vector psia0,psib0,phia0,phib0;
   static su3_vector psia1,psib1,phia1,phib1;
   static spinor rr0, rr1;
+  su3 * restrict u, * restrict v;
   spinor * restrict sp0 ALIGN;
   spinor * restrict sm0 ALIGN;
   spinor * restrict sp1 ALIGN;
@@ -392,8 +395,11 @@ void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo,
 #ifdef OMP
 #pragma omp for
 #endif
-  for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
-    ix=g_eo2lexic[icx];
+  for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+    hi = &g_hi[16*icx];
+    u = &tempU[(*hi)][0];
+    //ix=g_eo2lexic[icx];
+    hi++;
     rr0 = (*(l0 + (icx-ioff)));
     rr1 = (*(l1 + (icx-ioff)));
 
@@ -405,10 +411,13 @@ void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo,
 
     /*********************** direction +0 ********************/
 
-    iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
-
-    sp0 = k0 + icy;
-    sp1 = k1 + icy;
+    //iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
+    //u = &tempU[ix][0]; _mm_prefetch((char * const)u, _MM_HINT_T0);
+    //sp0 = k0 + icy;
+    //sp1 = k1 + icy;
+    sp0 = k0 + (*hi);
+    sp1 = k1 + (*hi);
+    hi += 4;
     _vector_add(psia0, sp0->s0, sp0->s2);
     _vector_add(psib0, sp0->s1, sp0->s3);
     _vector_add(psia1, sp1->s0, sp1->s2);
@@ -419,16 +428,18 @@ void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo,
     _vector_add(phia1, rr1.s0, rr1.s2);
     _vector_add(phib1, rr1.s1, rr1.s3);
 
-    _vector_tensor_vector_add_accum(tempU[ix][0], phia0, psia0, phib0, psib0);
-    _vector_tensor_vector_add_accum(tempU[ix][0], phia1, psia1, phib1, psib1);
+    _vector_tensor_vector_add_accum((*u), phia0, psia0, phib0, psib0);
+    _vector_tensor_vector_add_accum((*u), phia1, psia1, phib1, psib1);
+    u++;
+    //_vector_tensor_vector_add_accum2(*u, phia0, psia0, phib0, psib0, phia1, psia1, phib1, psib1);
 
     /*************** direction +1 **************************/
 
-    iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
-
-    sp0 = k0 + icy;
-    sp1 = k1 + icy;
-
+    //sp0 = k0 + icy;
+    //sp1 = k1 + icy;
+    sp0 = k0 + (*hi);
+    sp1 = k1 + (*hi);
+    hi += 4;
     _vector_i_add(psia0, sp0->s0, sp0->s3);
     _vector_i_add(psib0, sp0->s1, sp0->s2);
     _vector_i_add(psia1, sp1->s0, sp1->s3);
@@ -439,15 +450,19 @@ void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo,
     _vector_i_add(phia1, rr1.s0, rr1.s3);
     _vector_i_add(phib1, rr1.s1, rr1.s2);
 
-    _vector_tensor_vector_add_accum(tempU[ix][1], phia0, psia0, phib0, psib0);
-    _vector_tensor_vector_add_accum(tempU[ix][1], phia1, psia1, phib1, psib1);
+    _vector_tensor_vector_add_accum((*u), phia0, psia0, phib0, psib0);
+    _vector_tensor_vector_add_accum((*u), phia1, psia1, phib1, psib1);
+    u++;
+    //_vector_tensor_vector_add_accum2(*v, phia0, psia0, phib0, psib0, phia1, psia1, phib1, psib1);
 
     /*************** direction +2 **************************/
 
-    iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
-
-    sp0 = k0 + icy;
-    sp1 = k1 + icy;
+    //iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
+    //sp0 = k0 + icy;
+    //sp1 = k1 + icy;
+    sp0 = k0 + (*hi);
+    sp1 = k1 + (*hi);
+    hi += 4;
 
     _vector_add(psia0, sp0->s0, sp0->s3);
     _vector_sub(psib0, sp0->s1, sp0->s2);
@@ -459,15 +474,18 @@ void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo,
     _vector_add(phia1, rr1.s0, rr1.s3);
     _vector_sub(phib1, rr1.s1, rr1.s2);
 
-    _vector_tensor_vector_add_accum(tempU[ix][2], phia0, psia0, phib0, psib0);
-    _vector_tensor_vector_add_accum(tempU[ix][2], phia1, psia1, phib1, psib1);
+    _vector_tensor_vector_add_accum((*u), phia0, psia0, phib0, psib0);
+    _vector_tensor_vector_add_accum((*u), phia1, psia1, phib1, psib1);
+    u++;
+    //_vector_tensor_vector_add_accum2(*u, phia0, psia0, phib0, psib0, phia1, psia1, phib1, psib1);
 
     /****************** direction +3 ***********************/
 
-    iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
-
-    sp0 = k0 + icy;
-    sp1 = k1 + icy;
+    //iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
+    //sp0 = k0 + icy;
+    //sp1 = k1 + icy;
+    sp0 = k0 + (*hi);
+    sp1 = k1 + (*hi);
 
     _vector_i_add(psia0, sp0->s0, sp0->s2);
     _vector_i_sub(psib0, sp0->s1, sp0->s3);
@@ -479,8 +497,9 @@ void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo,
     _vector_i_add(phia1, rr1.s0, rr1.s2);
     _vector_i_sub(phib1, rr1.s1, rr1.s3);
 
-    _vector_tensor_vector_add_accum(tempU[ix][3], phia0, psia0, phib0, psib0);
-    _vector_tensor_vector_add_accum(tempU[ix][3], phia1, psia1, phib1, psib1);
+    _vector_tensor_vector_add_accum((*u), phia0, psia0, phib0, psib0);
+    _vector_tensor_vector_add_accum((*u), phia1, psia1, phib1, psib1);
+    //_vector_tensor_vector_add_accum2(*v, phia0, psia0, phib0, psib0, phia1, psia1, phib1, psib1);
 
     /****************** end of loop ************************/
   }
@@ -489,7 +508,9 @@ void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo,
 #pragma omp for
 #endif
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
-    ix=g_eo2lexic[icx];
+    hi = &g_hi[16*icx];
+    //ix=g_eo2lexic[icx];
+    hi += 2;
     rr0 = (*(l0 + (icx-ioff)));
     rr1 = (*(l1 + (icx-ioff)));
 
@@ -501,10 +522,14 @@ void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo,
 
     /************** direction -0 ****************************/
 
-    iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
-
-    sm0 = k0 + icy;
-    sm1 = k1 + icy;
+    //iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
+    u = &tempU[(*hi)][0];
+    hi++;
+    //sm0 = k0 + icy;
+    //sm1 = k1 + icy;
+    sm0 = k0 + (*hi);
+    sm1 = k1 + (*hi);
+    hi += 3;
       
     _vector_sub(psia0, sm0->s0, sm0->s2);
     _vector_sub(psib0, sm0->s1, sm0->s3);
@@ -516,15 +541,20 @@ void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo,
     _vector_sub(phia1, rr1.s0, rr1.s2);
     _vector_sub(phib1, rr1.s1, rr1.s3);
 
-    _vector_tensor_vector_add_accum(tempU[iy][0], psia0, phia0, psib0, phib0);
-    _vector_tensor_vector_add_accum(tempU[iy][0], psia1, phia1, psib1, phib1);
+    _vector_tensor_vector_add_accum((*u), psia0, phia0, psib0, phib0);
+    _vector_tensor_vector_add_accum((*u), psia1, phia1, psib1, phib1);
+    //_vector_tensor_vector_add_accum2(*u, psia0, phia0, psib0, phib0, psia1, phia1, psib1, phib1);
 
     /**************** direction -1 *************************/
 
-    iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
-
-    sm0 = k0 + icy;
-    sm1 = k1 + icy;
+    //iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
+    v = &tempU[(*hi)][1]; //_mm_prefetch((char * const)v, _MM_HINT_T0);
+    hi++;
+    //sm0 = k0 + icy;
+    //sm1 = k1 + icy;
+    sm0 = k0 + (*hi);
+    sm1 = k1 + (*hi);
+    hi += 3;
 
     _vector_i_sub(psia0, sm0->s0, sm0->s3);
     _vector_i_sub(psib0, sm0->s1, sm0->s2);
@@ -536,15 +566,20 @@ void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo,
     _vector_i_sub(phia1, rr1.s0, rr1.s3);
     _vector_i_sub(phib1, rr1.s1, rr1.s2);
 
-    _vector_tensor_vector_add_accum(tempU[iy][1], psia0, phia0, psib0, phib0);
-    _vector_tensor_vector_add_accum(tempU[iy][1], psia1, phia1, psib1, phib1);
+    _vector_tensor_vector_add_accum((*v), psia0, phia0, psib0, phib0);
+    _vector_tensor_vector_add_accum((*v), psia1, phia1, psib1, phib1);
+    //_vector_tensor_vector_add_accum2(*v, psia0, phia0, psib0, phib0, psia1, phia1, psib1, phib1);
 
     /***************** direction -2 ************************/
 
-    iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
-
-    sm0 = k0 + icy;
-    sm1 = k1 + icy;
+    //iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
+    u = &tempU[(*hi)][2]; //_mm_prefetch((char * const)u, _MM_HINT_T0);
+    hi++;
+    //sm0 = k0 + icy;
+    //sm1 = k1 + icy;
+    sm0 = k0 + (*hi);
+    sm1 = k1 + (*hi);
+    hi += 3;
 
     _vector_sub(psia0, sm0->s0, sm0->s3);
     _vector_add(psib0, sm0->s1, sm0->s2);
@@ -556,15 +591,19 @@ void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo,
     _vector_sub(phia1, rr1.s0, rr1.s3);
     _vector_add(phib1, rr1.s1, rr1.s2);
 
-    _vector_tensor_vector_add_accum(tempU[iy][2], psia0, phia0, psib0, phib0);
-    _vector_tensor_vector_add_accum(tempU[iy][2], psia1, phia1, psib1, phib1);
+    _vector_tensor_vector_add_accum((*u), psia0, phia0, psib0, phib0);
+    _vector_tensor_vector_add_accum((*u), psia1, phia1, psib1, phib1);
+    //_vector_tensor_vector_add_accum2(*u, psia0, phia0, psib0, phib0, psia1, phia1, psib1, psib1);
 
     /***************** direction -3 ************************/
 
     iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
-
-    sm0 = k0 + icy;
-    sm1 = k1 + icy;
+    v = &tempU[(*hi)][3]; //_mm_prefetch((char * const)v, _MM_HINT_T0);
+    hi++;
+    //sm0 = k0 + icy;
+    //sm1 = k1 + icy;
+    sm0 = k0 + (*hi);
+    sm1 = k1 + (*hi);
 
     _vector_i_sub(psia0, sm0->s0, sm0->s2);
     _vector_i_add(psib0, sm0->s1, sm0->s3);
@@ -576,8 +615,9 @@ void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo,
     _vector_i_sub(phia1, rr1.s0, rr1.s2);
     _vector_i_add(phib1, rr1.s1, rr1.s3);
 
-    _vector_tensor_vector_add_accum(tempU[iy][3], psia0, phia0, psib0, phib0);
-    _vector_tensor_vector_add_accum(tempU[iy][3], psia1, phia1, psib1, phib1);
+    _vector_tensor_vector_add_accum((*v), psia0, phia0, psib0, phib0);
+    _vector_tensor_vector_add_accum((*v), psia1, phia1, psib1, phib1);
+    //_vector_tensor_vector_add_accum2(*v, psia0, phia0, psib0, phib0, psia1, phia1, psib1, phib1);
      
     /****************** end of loop ************************/
   }
@@ -588,6 +628,194 @@ void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo,
 
 #ifdef _KOJAK_INST
 #pragma pomp inst end(derivSb_nd_tensor)
+#endif
+}
+
+void deriv_Sb_tensor(su3 ** tempU, const int ieo, 
+		     spinor * const l, spinor * const k) {
+
+  /* for parallelization */
+#ifdef MPI
+  xchange_2fields(k, l, ieo);
+#endif
+
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+#endif
+  int ix,iy;
+  int ioff, icx, icy;
+  static su3_vector psia0,psib0,phia0,phib0;
+  static spinor rr0;
+  su3 * restrict u, * restrict v;
+  spinor * restrict sp0 ALIGN;
+  spinor * restrict sm0 ALIGN;
+
+#ifdef OMP
+#undef static
+#endif
+
+#ifdef _KOJAK_INST
+#pragma pomp inst begin(derivSb_tensor)
+#endif
+#ifdef XLC
+#pragma disjoint(*sp0, *sm0, *sp1, sm1, *up, *um)
+#endif
+
+  if(ieo==0) {
+    ioff=0;
+  }
+  else {
+    ioff=(VOLUME+RAND)/2;
+  } 
+
+  /************** loop over all lattice sites ****************/
+#ifdef OMP
+#pragma omp for
+#endif
+  for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
+    ix=g_eo2lexic[icx];
+    rr0 = (*(l + (icx-ioff)));
+
+    /*multiply the left vector with gamma5*/
+    _vector_minus_assign(rr0.s2, rr0.s2);
+    _vector_minus_assign(rr0.s3, rr0.s3);
+
+    /*********************** direction +0 ********************/
+
+    iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
+    u = &tempU[ix][0]; _mm_prefetch((char * const)u, _MM_HINT_T0);
+    sp0 = k + icy;
+    _vector_add(psia0, sp0->s0, sp0->s2);
+    _vector_add(psib0, sp0->s1, sp0->s3);
+      
+    _vector_add(phia0, rr0.s0, rr0.s2);
+    _vector_add(phib0, rr0.s1, rr0.s3);
+
+    _vector_tensor_vector_add_accum(tempU[ix][0], phia0, psia0, phib0, psib0);
+
+    /*************** direction +1 **************************/
+
+    iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
+    v = &tempU[ix][1]; _mm_prefetch((char * const)v, _MM_HINT_T0);
+    sp0 = k + icy;
+
+    _vector_i_add(psia0, sp0->s0, sp0->s3);
+    _vector_i_add(psib0, sp0->s1, sp0->s2);
+
+    _vector_i_add(phia0, rr0.s0, rr0.s3);
+    _vector_i_add(phib0, rr0.s1, rr0.s2);
+
+    _vector_tensor_vector_add_accum(tempU[ix][1], phia0, psia0, phib0, psib0);
+
+    /*************** direction +2 **************************/
+
+    iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
+    u = &tempU[ix][2]; _mm_prefetch((char * const)u, _MM_HINT_T0);
+    sp0 = k + icy;
+
+    _vector_add(psia0, sp0->s0, sp0->s3);
+    _vector_sub(psib0, sp0->s1, sp0->s2);
+      
+    _vector_add(phia0, rr0.s0, rr0.s3);
+    _vector_sub(phib0, rr0.s1, rr0.s2);
+
+    _vector_tensor_vector_add_accum(tempU[ix][2], phia0, psia0, phib0, psib0);
+
+    /****************** direction +3 ***********************/
+
+    iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
+    v = &tempU[ix][3]; _mm_prefetch((char * const)v, _MM_HINT_T0);
+    sp0 = k + icy;
+
+    _vector_i_add(psia0, sp0->s0, sp0->s2);
+    _vector_i_sub(psib0, sp0->s1, sp0->s3);
+
+    _vector_i_add(phia0, rr0.s0, rr0.s2);
+    _vector_i_sub(phib0, rr0.s1, rr0.s3);
+
+    _vector_tensor_vector_add_accum(tempU[ix][3], phia0, psia0, phib0, psib0);
+
+    /****************** end of loop ************************/
+  }
+
+#ifdef OMP
+#pragma omp for
+#endif
+  for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
+    ix=g_eo2lexic[icx];
+    rr0 = (*(l + (icx-ioff)));
+
+    /*multiply the left vector with gamma5*/
+    _vector_minus_assign(rr0.s2, rr0.s2);
+    _vector_minus_assign(rr0.s3, rr0.s3);
+
+    /************** direction -0 ****************************/
+
+    iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
+    u = &tempU[iy][0]; _mm_prefetch((char * const)u, _MM_HINT_T0);
+    sm0 = k + icy;
+      
+    _vector_sub(psia0, sm0->s0, sm0->s2);
+    _vector_sub(psib0, sm0->s1, sm0->s3);
+
+    _vector_sub(phia0, rr0.s0, rr0.s2);
+    _vector_sub(phib0, rr0.s1, rr0.s3);
+
+    _vector_tensor_vector_add_accum(tempU[iy][0], psia0, phia0, psib0, phib0);
+
+    /**************** direction -1 *************************/
+
+    iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
+    v = &tempU[iy][1]; _mm_prefetch((char * const)v, _MM_HINT_T0);
+    sm0 = k + icy;
+
+    _vector_i_sub(psia0, sm0->s0, sm0->s3);
+    _vector_i_sub(psib0, sm0->s1, sm0->s2);
+
+    _vector_i_sub(phia0, rr0.s0, rr0.s3);
+    _vector_i_sub(phib0, rr0.s1, rr0.s2);
+
+    _vector_tensor_vector_add_accum(tempU[iy][1], psia0, phia0, psib0, phib0);
+
+    /***************** direction -2 ************************/
+
+    iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
+    u = &tempU[iy][2]; _mm_prefetch((char * const)u, _MM_HINT_T0);
+    sm0 = k + icy;
+
+    _vector_sub(psia0, sm0->s0, sm0->s3);
+    _vector_add(psib0, sm0->s1, sm0->s2);
+
+    _vector_sub(phia0, rr0.s0, rr0.s3);
+    _vector_add(phib0, rr0.s1, rr0.s2);
+
+    _vector_tensor_vector_add_accum(tempU[iy][2], psia0, phia0, psib0, phib0);
+
+    /***************** direction -3 ************************/
+
+    iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
+    v = &tempU[iy][3]; _mm_prefetch((char * const)v, _MM_HINT_T0);
+    sm0 = k + icy;
+
+    _vector_i_sub(psia0, sm0->s0, sm0->s2);
+    _vector_i_add(psib0, sm0->s1, sm0->s3);
+
+    _vector_i_sub(phia0, rr0.s0, rr0.s2);
+    _vector_i_add(phib0, rr0.s1, rr0.s3);
+
+    _vector_tensor_vector_add_accum(tempU[iy][3], psia0, phia0, psib0, phib0);
+     
+    /****************** end of loop ************************/
+  }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
+#ifdef _KOJAK_INST
+#pragma pomp inst end(derivSb_tensor)
 #endif
 }
 
