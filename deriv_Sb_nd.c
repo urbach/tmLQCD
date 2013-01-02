@@ -40,7 +40,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <xmmintrin.h>
 #include "global.h"
 #include "su3.h"
 #include "boundary.h"
@@ -381,7 +380,7 @@ void deriv_Sb_nd_tensor(su3 ** tempU, const int ieo,
 #pragma pomp inst begin(derivSb_nd_tensor)
 #endif
 #ifdef XLC
-#pragma disjoint(*sp0, *sm0, *sp1, sm1, *up, *um)
+#pragma disjoint(*sp0, *sm0, *sp1, sm1, *u, *v)
 #endif
 
   if(ieo==0) {
@@ -660,7 +659,7 @@ void deriv_Sb_tensor(su3 ** tempU, const int ieo,
 #pragma pomp inst begin(derivSb_tensor)
 #endif
 #ifdef XLC
-#pragma disjoint(*sp0, *sm0, *sp1, sm1, *up, *um)
+#pragma disjoint(*sp0, *sm0, *u, *v)
 #endif
 
   if(ieo==0) {
@@ -685,7 +684,7 @@ void deriv_Sb_tensor(su3 ** tempU, const int ieo,
     /*********************** direction +0 ********************/
 
     iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
-    u = &tempU[ix][0]; _mm_prefetch((char * const)u, _MM_HINT_T0);
+    u = &tempU[ix][0]; //_mm_prefetch((char * const)u, _MM_HINT_T0);
     sp0 = k + icy;
     _vector_add(psia0, sp0->s0, sp0->s2);
     _vector_add(psib0, sp0->s1, sp0->s3);
@@ -698,7 +697,7 @@ void deriv_Sb_tensor(su3 ** tempU, const int ieo,
     /*************** direction +1 **************************/
 
     iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
-    v = &tempU[ix][1]; _mm_prefetch((char * const)v, _MM_HINT_T0);
+    v = &tempU[ix][1]; //_mm_prefetch((char * const)v, _MM_HINT_T0);
     sp0 = k + icy;
 
     _vector_i_add(psia0, sp0->s0, sp0->s3);
@@ -712,7 +711,7 @@ void deriv_Sb_tensor(su3 ** tempU, const int ieo,
     /*************** direction +2 **************************/
 
     iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
-    u = &tempU[ix][2]; _mm_prefetch((char * const)u, _MM_HINT_T0);
+    u = &tempU[ix][2]; //_mm_prefetch((char * const)u, _MM_HINT_T0);
     sp0 = k + icy;
 
     _vector_add(psia0, sp0->s0, sp0->s3);
@@ -726,7 +725,7 @@ void deriv_Sb_tensor(su3 ** tempU, const int ieo,
     /****************** direction +3 ***********************/
 
     iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
-    v = &tempU[ix][3]; _mm_prefetch((char * const)v, _MM_HINT_T0);
+    v = &tempU[ix][3]; //_mm_prefetch((char * const)v, _MM_HINT_T0);
     sp0 = k + icy;
 
     _vector_i_add(psia0, sp0->s0, sp0->s2);
@@ -754,7 +753,7 @@ void deriv_Sb_tensor(su3 ** tempU, const int ieo,
     /************** direction -0 ****************************/
 
     iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
-    u = &tempU[iy][0]; _mm_prefetch((char * const)u, _MM_HINT_T0);
+    u = &tempU[iy][0]; //_mm_prefetch((char * const)u, _MM_HINT_T0);
     sm0 = k + icy;
       
     _vector_sub(psia0, sm0->s0, sm0->s2);
@@ -768,7 +767,7 @@ void deriv_Sb_tensor(su3 ** tempU, const int ieo,
     /**************** direction -1 *************************/
 
     iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
-    v = &tempU[iy][1]; _mm_prefetch((char * const)v, _MM_HINT_T0);
+    v = &tempU[iy][1]; //_mm_prefetch((char * const)v, _MM_HINT_T0);
     sm0 = k + icy;
 
     _vector_i_sub(psia0, sm0->s0, sm0->s3);
@@ -782,7 +781,7 @@ void deriv_Sb_tensor(su3 ** tempU, const int ieo,
     /***************** direction -2 ************************/
 
     iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
-    u = &tempU[iy][2]; _mm_prefetch((char * const)u, _MM_HINT_T0);
+    u = &tempU[iy][2]; //_mm_prefetch((char * const)u, _MM_HINT_T0);
     sm0 = k + icy;
 
     _vector_sub(psia0, sm0->s0, sm0->s3);
@@ -796,7 +795,7 @@ void deriv_Sb_tensor(su3 ** tempU, const int ieo,
     /***************** direction -3 ************************/
 
     iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
-    v = &tempU[iy][3]; _mm_prefetch((char * const)v, _MM_HINT_T0);
+    v = &tempU[iy][3]; //_mm_prefetch((char * const)v, _MM_HINT_T0);
     sm0 = k + icy;
 
     _vector_i_sub(psia0, sm0->s0, sm0->s2);
