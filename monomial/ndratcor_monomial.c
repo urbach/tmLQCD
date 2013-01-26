@@ -47,10 +47,10 @@
 #include "ndratcor_monomial.h"
 
 // computes ||(1 - C^dagger R C) phi||
-void check_C(spinor * const k_up, spinor * const k_dn,
-	     spinor * const l_up, spinor * const l_dn,
-	     const int id, hamiltonian_field_t * const hf,
-	     solver_pm_t * solver_pm);
+void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
+		   spinor * const l_up, spinor * const l_dn,
+		   const int id, hamiltonian_field_t * const hf,
+		   solver_pm_t * solver_pm);
 
 // applies (Q^2 R^2 -1) phi
 double apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
@@ -235,10 +235,10 @@ double apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
 
 // computes ||(1 - C^dagger R C) phi||
 
-void check_C(spinor * const k_up, spinor * const k_dn,
-	     spinor * const l_up, spinor * const l_dn,
-	     const int id, hamiltonian_field_t * const hf,
-	     solver_pm_t * solver_pm) {
+void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
+		   spinor * const l_up, spinor * const l_dn,
+		   const int id, hamiltonian_field_t * const hf,
+		   solver_pm_t * solver_pm) {
   monomial * mnl = &monomial_list[id];
   mnl->iter0 = cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     l_up, l_dn, solver_pm);
