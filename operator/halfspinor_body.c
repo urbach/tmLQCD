@@ -490,7 +490,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #ifdef OMP
    }
 #endif
-#endif
+#endif /* _THREAD_OVERLAP */
 
 
 #ifdef OMP
