@@ -432,11 +432,7 @@
   intrin_vector_load(_rs_s0, &phi[ix]->s0);				\
   intrin_vector_load(_rs_s2, &phi[ix]->s0);				\
   intrin_vector_load(_rs_s1, &phi[ix]->s1);				\
-  intrin_vector_load(_rs_s3, &phi[ix]->s1);				\
-  ka0_v = _mm_load_pd((const double*) &ka0);				\
-  ka1_v = _mm_load_pd((const double*) &ka1);				\
-  ka2_v = _mm_load_pd((const double*) &ka2);				\
-  ka3_v = _mm_load_pd((const double*) &ka3);
+  intrin_vector_load(_rs_s3, &phi[ix]->s1);
 
 #define _hop_t_m_post()						\
   intrin_su3_load(_U, U);					\
