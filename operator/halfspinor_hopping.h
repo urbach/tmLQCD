@@ -351,6 +351,212 @@
   const int predist=1;
 #endif
 
+#elif (defined SSEINTRINSICS)
+
+#define _prefetch_spinor(addr)
+#define _prefetch_su3(addr)
+#define _hop_t_p_pre32()
+#define _hop_t_m_pre32()
+#define _hop_x_p_pre32()
+#define _hop_x_m_pre32()
+#define _hop_y_p_pre32()
+#define _hop_y_m_pre32()
+#define _hop_z_p_pre32()
+#define _hop_z_m_pre32()
+#define _hop_t_p_post32()
+#define _hop_t_m_post32()
+#define _hop_x_p_post32()
+#define _hop_x_m_post32()
+#define _hop_y_p_post32()
+#define _hop_y_m_post32()
+#define _hop_z_p_post32()
+#define _hop_z_m_post32()
+
+#define _hop_t_p_pre()							\
+  intrin_vector_load(_rs_s0, &(*s).s0);					\
+  intrin_vector_load(_rs_s1, &(*s).s1);					\
+  intrin_vector_load(_rs_s2, &(*s).s2);					\
+  intrin_vector_load(_rs_s3, &(*s).s3);					\
+  intrin_su3_load(_U, U);						\
+  intrin_vector_add(_psi, _rs_s0, _rs_s2);				\
+  intrin_vector_add(_psi2, _rs_s1, _rs_s3);				\
+  intrin_su3_multiply(_chi, _U, _psi);					\
+  intrin_su3_multiply(_chi2, _U, _psi2);				\
+  intrin_complex_times_vector_store(&phi[ix]->s0, ka0_v, _chi);	\
+  intrin_complex_times_vector_store(&phi[ix]->s1, ka0_v, _chi2);
+
+#define _hop_t_m_pre()						\
+  intrin_vector_sub_store(&phi[ix]->s0, _rs_s0, _rs_s2);	\
+  intrin_vector_sub_store(&phi[ix]->s1, _rs_s1, _rs_s3);
+
+#define _hop_x_p_pre()				\
+  intrin_su3_load(_U, U);			\
+  intrin_vector_i_add(_psi, _rs_s0, _rs_s3);	\
+  intrin_vector_i_add(_psi2, _rs_s1, _rs_s2);	\
+  intrin_su3_multiply(_chi, _U, _psi);		\
+  intrin_su3_multiply(_chi2, _U, _psi2);				\
+  intrin_complex_times_vector_store(&phi[ix]->s0, ka1_v, _chi);	\
+  intrin_complex_times_vector_store(&phi[ix]->s1, ka1_v, _chi2);
+
+#define _hop_x_m_pre()				\
+  intrin_vector_i_sub_store(&phi[ix]->s0, _rs_s0, _rs_s3);		\
+  intrin_vector_i_sub_store(&phi[ix]->s1, _rs_s1, _rs_s2);
+
+#define _hop_y_p_pre()				\
+  intrin_su3_load(_U, U);			\
+  intrin_vector_add(_psi, _rs_s0, _rs_s3);	\
+  intrin_vector_sub(_psi2, _rs_s1, _rs_s2);	\
+  intrin_su3_multiply(_chi, _U, _psi);		\
+  intrin_su3_multiply(_chi2, _U, _psi2);				\
+  intrin_complex_times_vector_store(&phi[ix]->s0, ka2_v, _chi);	\
+  intrin_complex_times_vector_store(&phi[ix]->s1, ka2_v, _chi2);
+
+#define _hop_y_m_pre()				\
+  intrin_vector_sub_store(&phi[ix]->s0, _rs_s0, _rs_s3);	\
+  intrin_vector_add_store(&phi[ix]->s1, _rs_s1, _rs_s2);
+
+#define _hop_z_p_pre()				\
+  intrin_su3_load(_U, U);				\
+  intrin_vector_i_add(_psi, _rs_s0, _rs_s2);		\
+  intrin_vector_i_sub(_psi2, _rs_s1, _rs_s3);		\
+  intrin_su3_multiply(_chi, _U, _psi);			\
+  intrin_su3_multiply(_chi2, _U, _psi2);				\
+  intrin_complex_times_vector_store(&phi[ix]->s0, ka3_v, _chi);	\
+  intrin_complex_times_vector_store(&phi[ix]->s1, ka3_v, _chi2);
+
+#define _hop_z_m_pre()							\
+  intrin_vector_i_sub_store(&phi[ix]->s0, _rs_s0, _rs_s2);		\
+  intrin_vector_i_add_store(&phi[ix]->s1, _rs_s1, _rs_s3);
+
+#define _hop_t_p_post()							\
+  intrin_vector_load(_rs_s0, &phi[ix]->s0);				\
+  intrin_vector_load(_rs_s2, &phi[ix]->s0);				\
+  intrin_vector_load(_rs_s1, &phi[ix]->s1);				\
+  intrin_vector_load(_rs_s3, &phi[ix]->s1);				\
+  ka0_v = _mm_load_pd((const double*) &ka0);				\
+  ka1_v = _mm_load_pd((const double*) &ka1);				\
+  ka2_v = _mm_load_pd((const double*) &ka2);				\
+  ka3_v = _mm_load_pd((const double*) &ka3);
+
+#define _hop_t_m_post()						\
+  intrin_su3_load(_U, U);					\
+  intrin_vector_load(_phi_ix_s0, &phi[ix]->s0);			\
+  intrin_su3_inverse_multiply(_chi, _U, _phi_ix_s0);		\
+  intrin_vector_load(_phi_ix_s1, &phi[ix]->s1);			\
+  intrin_su3_inverse_multiply(_chi2, _U, _phi_ix_s1);		\
+  intrin_complexcjg_times_vector(_psi, ka0_v, _chi);		\
+  intrin_complexcjg_times_vector(_psi2, ka0_v, _chi2);		\
+  intrin_vector_add(_rs_s0, _rs_s0, _psi);			\
+  intrin_vector_sub(_rs_s2, _rs_s2, _psi);			\
+  intrin_vector_add(_rs_s1, _rs_s1, _psi2);			\
+  intrin_vector_sub(_rs_s3, _rs_s3, _psi2);
+
+#define _hop_x_p_post()					\
+  intrin_vector_load(_phi_ix_s0, &phi[ix]->s0);		\
+  intrin_vector_add(_rs_s0, _rs_s0, _phi_ix_s0);	\
+  intrin_vector_i_sub(_rs_s3, _rs_s3, _phi_ix_s0);	\
+  intrin_vector_load(_phi_ix_s1, &phi[ix]->s1);		\
+  intrin_vector_add(_rs_s1, _rs_s1, _phi_ix_s1);	\
+  intrin_vector_i_sub(_rs_s2, _rs_s2, _phi_ix_s1);
+
+#define _hop_x_m_post()						\
+  intrin_su3_load(_U, U);					\
+  intrin_vector_load(_phi_ix_s0, &phi[ix]->s0);			\
+  intrin_su3_inverse_multiply(_chi, _U, _phi_ix_s0);		\
+  intrin_vector_load(_phi_ix_s1, &phi[ix]->s1);			\
+  intrin_su3_inverse_multiply(_chi2, _U, _phi_ix_s1);		\
+  intrin_complexcjg_times_vector(_psi, ka1_v, _chi);		\
+  intrin_complexcjg_times_vector(_psi2, ka1_v, _chi2);		\
+  intrin_vector_add(_rs_s0, _rs_s0, _psi);			\
+  intrin_vector_i_add(_rs_s3, _rs_s3, _psi);			\
+  intrin_vector_add(_rs_s1, _rs_s1, _psi2);			\
+  intrin_vector_i_add(_rs_s2, _rs_s2, _psi2);
+
+#define _hop_y_p_post()					\
+  intrin_vector_load(_phi_ix_s0, &phi[ix]->s0);		\
+  intrin_vector_add(_rs_s0, _rs_s0, _phi_ix_s0);	\
+  intrin_vector_add(_rs_s3, _rs_s3, _phi_ix_s0);	\
+  intrin_vector_load(_phi_ix_s1, &phi[ix]->s1);		\
+  intrin_vector_add(_rs_s1, _rs_s1, _phi_ix_s1);	\
+  intrin_vector_sub(_rs_s2, _rs_s2, _phi_ix_s1);
+
+#define _hop_y_m_post()						\
+  intrin_su3_load(_U, U);					\
+  intrin_vector_load(_phi_ix_s0, &phi[ix]->s0);			\
+  intrin_su3_inverse_multiply(_chi, _U, _phi_ix_s0);		\
+  intrin_vector_load(_phi_ix_s1, &phi[ix]->s1);			\
+  intrin_su3_inverse_multiply(_chi2, _U, _phi_ix_s1);		\
+  intrin_complexcjg_times_vector(_psi, ka2_v, _chi);		\
+  intrin_complexcjg_times_vector(_psi2, ka2_v, _chi2);		\
+  intrin_vector_add(_rs_s0, _rs_s0, _psi);			\
+  intrin_vector_sub(_rs_s3, _rs_s3, _psi);			\
+  intrin_vector_add(_rs_s1, _rs_s1, _psi2);			\
+  intrin_vector_i_add(_rs_s2, _rs_s2, _psi2);
+
+#define _hop_z_p_post()					\
+  intrin_vector_load(_phi_ix_s0, &phi[ix]->s0);		\
+  intrin_vector_add(_rs_s0, _rs_s0, _phi_ix_s0);	\
+  intrin_vector_i_sub(_rs_s2, _rs_s2, _phi_ix_s0);	\
+  intrin_vector_load(_phi_ix_s1, &phi[ix]->s1);		\
+  intrin_vector_add(_rs_s1, _rs_s1, _phi_ix_s1);	\
+  intrin_vector_i_add(_rs_s3, _rs_s3, _phi_ix_s1);
+
+#define _hop_z_m_post()						\
+  intrin_su3_load(_U, U);					\
+  intrin_vector_load(_phi_ix_s0, &phi[ix]->s0);			\
+  intrin_su3_inverse_multiply(_chi, _U, _phi_ix_s0);		\
+  intrin_vector_load(_phi_ix_s1, &phi[ix]->s1);			\
+  intrin_su3_inverse_multiply(_chi2, _U, _phi_ix_s1);		\
+  intrin_complexcjg_times_vector(_psi, ka3_v, _chi);		\
+  intrin_complexcjg_times_vector(_psi2, ka3_v, _chi2);		\
+  intrin_vector_add(_rs_s0, _rs_s0, _psi);		\
+  intrin_vector_i_add(_rs_s2, _rs_s2, _psi);		\
+  intrin_vector_add(_rs_s1, _rs_s1, _psi2);		\
+  intrin_vector_i_sub(_rs_s3, _rs_s3, _psi2);
+
+#define _hop_store_post(res)			\
+  intrin_vector_store(&res->s0, _rs_s0);		\
+  intrin_vector_store(&res->s1, _rs_s1);		\
+  intrin_vector_store(&res->s2, _rs_s2);		\
+  intrin_vector_store(&res->s3, _rs_s3);
+
+
+#define _hop_mul_g5_cmplx_and_store(res)			\
+  intrin_complex_times_vector_store(&res->s0, cf, _rs_s0);	\
+  intrin_complex_times_vector_store(&res->s1, cf, _rs_s1);	\
+  intrin_complexcjg_times_vector_store(&res->s2, cf, _rs_s2);	\
+  intrin_complexcjg_times_vector_store(&res->s3, cf, _rs_s3);
+
+#define _g5_cmplx_sub_hop_and_g5store(res)		\
+  intrin_vector_load(_phi_ix_s0, &pn->s0);		\
+  intrin_complex_times_vector(_psi, cf, _phi_ix_s0);	\
+  intrin_vector_sub_store(&res->s0, _psi, _rs_s0);	\
+  intrin_vector_load(_phi_ix_s1, &pn->s1);		\
+  intrin_complex_times_vector(_psi2, cf, _phi_ix_s1);	\
+  intrin_vector_sub_store(&res->s1, _psi2, _rs_s1);	\
+  intrin_vector_load(_phi_ix_s0, &pn->s2);		\
+  intrin_complex_times_vector(_psi, cf, _phi_ix_s0);	\
+  intrin_vector_sub_store(&res->s2, _rs_s2, _psi);	\
+  intrin_vector_load(_phi_ix_s1, &pn->s3);		\
+  intrin_complex_times_vector(_psi2, cf, _phi_ix_s1);	\
+  intrin_vector_sub_store(&res->s3, _rs_s3, _psi2);
+
+
+
+#  define _declare_hregs()						\
+  __m128d ka0_v, ka1_v, ka2_v, ka3_v;					\
+  __m128d _U[3][3], _psi[3], _psi2[3], _chi[3], _chi2[3],		\
+    _rs_s0[3], _rs_s1[3], _rs_s2[3], _rs_s3[3],				\
+    _phi_ix_s0[3], _phi_ix_s1[3];					\
+  ka0_v = _mm_load_pd((const double*) &ka0);				\
+  ka1_v = _mm_load_pd((const double*) &ka1);				\
+  ka2_v = _mm_load_pd((const double*) &ka2);				\
+  ka3_v = _mm_load_pd((const double*) &ka3);
+
+
+
+
+
 #elif (defined BGL && defined XLC)
 
 #define _declare_hregs()					\

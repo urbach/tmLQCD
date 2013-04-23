@@ -73,6 +73,9 @@
 #  if ((defined SSE2)||(defined SSE3))
 #    include "sse.h"
 
+#  elif (defined SSEINTRINSICS)
+#    include "sse_intrinsics.h"
+
 #  elif (defined BGL && defined XLC)
 #    include "bgl.h"
 

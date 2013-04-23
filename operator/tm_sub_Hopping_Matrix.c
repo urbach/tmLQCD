@@ -60,6 +60,9 @@
 #  if ((defined SSE2)||(defined SSE3))
 #    include "sse.h"
 
+#  elif (defined SSEINTRINSICS)
+#    include "sse_intrinsics.h"
+
 #  elif (defined BGL && defined XLC)
 #    include "bgl.h"
 
@@ -93,6 +96,9 @@ void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * const p, sp
 #  elif (defined SSE2 || defined SSE3)
     _Complex double ALIGN cf = cfactor;
     su3_vector ALIGN psi, psi2;
+#  elif defined SSEINTRINSICS
+    __m128d cf = _mm_load_pd((const double*) &cfactor);
+    
 #  endif
 #  include "operator/halfspinor_body.c"
 #  undef _TM_SUB_HOP    
