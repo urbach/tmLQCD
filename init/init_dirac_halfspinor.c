@@ -29,6 +29,7 @@
 #include "global.h"
 #include "su3.h"
 #include "init_dirac_halfspinor.h"
+#include "fatal_error.h"
 
 #ifdef BGQ
 #  define SPI_ALIGN_BASE 0x7f
@@ -281,7 +282,7 @@ int init_dirac_halfspinor() {
 			 );
   if(rc != 0) {
     fprintf(stderr, "msg_InjFifoInit failed with rc=%d\n",rc);
-    exit(1);
+    fatal_error("msg_InjFifoInit failed","init_dirac_halfspinor");
   }
 
   // Set up base address table for reception counter and buffer
@@ -307,7 +308,7 @@ int init_dirac_halfspinor() {
   rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
   if(rc) {
     printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
-    exit(__LINE__);
+    fatal_error("MUSPI_GIBarrierInit failed","init_dirac_halfspinor");
   }
   // reset the recv counter 
   recvCounter = totalMessageSize;
@@ -533,7 +534,7 @@ int init_dirac_halfspinor32() {
   int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
   if(rc) {
     printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
-    exit(__LINE__);
+    fatal_error("MUSPI_GIBarrierInit failed","init_dirac_halfspinor");
   }
   // reset the recv counter 
   recvCounter = totalMessageSize/2;
