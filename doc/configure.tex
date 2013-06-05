@@ -21,7 +21,7 @@ C-compiler. On some platforms you may also need to know the
 corresponding fortran 77 compiler, in particular in cases where you
 cross-compile. 
 
-\subsection{Configuring the hmc package}
+\subsection{Configuring the tmLQCD package}
 \label{sec:config}
 
 In order to get a simple configuration of the hmc package it is enough
@@ -75,6 +75,11 @@ following we describe the most important of them (check {\ttfamily
   of speedup when compared to only SSE2. However, only a few
   processors are capable of SSE3 so far.
 
+\item {\ttfamily --enable-qpx}:\\
+  Enable the usage of QPX instruction set and use the Dirac operator
+  written in XLC compiler intrinsic functions. QPX is, therefore, only
+  available with the XLC compiler.
+
 \item {\ttfamily --enable-gaugecopy}:\\
   See section \ref{sec:dirac} for details on this option. It will
   increase the memory requirement of the code.
@@ -101,8 +106,23 @@ following we describe the most important of them (check {\ttfamily
 
 \item {\ttfamily --with-limedir=<dir>}:\\
   Tells configure where to find the lime package, which is required for
-  the build of the HMC. It is used for the ILDG file format.
+  the build of tmLQCD. It is used for the ILDG file format.
  
+\item {\ttfamily --with-lemondir=<dir>}:\\
+  The code will be compiled using the lemon library for parallel IO
+  found in the directory specified with this option. Note that still
+  LIME is needed.
+
+\item {\ttfamily --enable-openmp}:\\
+  enables openMP parallelisation. Can also be used hybrid together
+  with MPI.
+
+\item {\ttfamily --enable-alignment=<n>}:\\
+  Automatically or expliclty align arrays to byte number: auto, none,
+  16, 32 [default=auto]. This option is important for builds using SSE
+  and/or other vector units which may fail or malfunction if the data
+  is not correctly aligned.
+
 \end{itemize}
 
 The configure script will guess at the very beginning on which
@@ -114,6 +134,24 @@ instance in order to compile for the BG/P you have to specify
 For certain architectures like the Blue Gene systems there are
 {\ttfamily README.arch} files in the top source directory with
 exsample configure calls.
+
+\subsubsection{Configuring for GPU Usage}
+
+The GPU part of the package is written in CUDA and can be switched on
+during configure. A working installation of CUDA is required.
+
+\begin{itemize}
+\item {\ttfamily --enable-gpu=yes|no}:\\
+  enable or disables the CUDA GPU part of the package.
+
+\item {\ttfamily --with-cuda=<dir>}:\\
+  specifies the directory where to find the cuda installation.
+
+\item {\ttfamily --with-cudacompileargs=<options>}:\\
+  allows to spedify the compiler options for the CUDA compiler. The
+  options should be adjusted such as to match the NVIDIA GPU model.
+\end{itemize}
+
 
 \subsection{Building and Installing}
 

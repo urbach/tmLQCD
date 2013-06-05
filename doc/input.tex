@@ -906,6 +906,24 @@ EndMonomial
 
 \end{verbatim}
 
+\subsubsection{Enabling GPU Usage}
+
+In order to run the solver (and other parts) on the (NVIDIA) GPU you
+need to add the following section to your input file. The parameters
+may be adjusted for optimal performance.
+
+\begin{verbatim}
+BeginGPUInit
+  MaxInnerSolverIteration = 1000
+  InnerSolverPrecision = 1.0e-4
+EndGPUInit
+\end{verbatim}
+
+Note that usually the GPU device is chosen automatically on hosts with
+more than one GPU attached. If really needed you can specify the
+device with {\ttfamily DeviceNum=2} to run on GPU device 2 (counting
+starts with 0).
+
 \subsubsection{Reread functionality}
 
 If you store a file with name {\ttfamily hmc.reread} in the working
