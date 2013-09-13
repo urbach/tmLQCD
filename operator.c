@@ -254,7 +254,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 	optr->iterations = invert_eo( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 				      optr->eps_sq, optr->maxiter,
 				      optr->solver, optr->rel_prec,
-				      0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->id );
+				      0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->solver_params, optr->id );
 	
 	/* check result */
 	M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
@@ -266,7 +266,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 
 	optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 					    optr->eps_sq, optr->maxiter,
-					    optr->solver, optr->rel_prec,
+					    optr->solver, optr->rel_prec,optr->solver_params,
 					    &g_gauge_field, &Qsw_pm_psi, &Qsw_minus_psi);
 	/* check result */
  	Msw_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);

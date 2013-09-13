@@ -175,6 +175,8 @@ inline void rmQuotes(char *str){
   int dfl_poly_iter;
 
   int use_preconditioning;
+
+
 %}
 
 %option never-interactive
@@ -269,6 +271,7 @@ inline void rmQuotes(char *str){
 %x DBCLOVEROP
 %x TMSOLVER
 %x DBTMSOLVER
+%x CSWSOLVER
 %x OVSOLVER
 
 %x INITMONOMIAL
@@ -309,6 +312,9 @@ inline void rmQuotes(char *str){
 %x DFLPOLYITER
 
 %x PRECONDITIONING
+
+
+
 
 
 %%
@@ -403,6 +409,9 @@ inline void rmQuotes(char *str){
 ^DflPolyIter{EQL}                  BEGIN(DFLPOLYITER);
 
 ^BeginGPU                          BEGIN(INITGPU);
+
+
+
 
 
 
@@ -535,6 +544,33 @@ inline void rmQuotes(char *str){
     optr->rel_prec = 0;
     if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
+
+  {SPC}*EigCGnrhs{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).eigcg_nrhs = a;
+    if(myverbose) printf("  EigCGnrhs set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGnev{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).eigcg_nev = a;
+    if(myverbose) printf("  EigCGnev set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGvmax{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).eigcg_vmax = a;
+    if(myverbose) printf("  EigCGvmax set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGldh{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).eigcg_ldh = a;
+    if(myverbose) printf("  EigCGldh set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGrestolsq{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    (optr->solver_params).eigcg_restolsq = c;
+    if(myverbose) printf("  EigCGrestolsq set to %f line %d operator %d\n", a, line_of_file, current_operator);
+  }
+
   {SPC}*ExtraMasses{EQL}{FLTLIST} {
     char * token = NULL;
     optr->no_extra_masses = 0;
@@ -613,6 +649,14 @@ inline void rmQuotes(char *str){
     BEGIN(TMSOLVER);
   }
 }
+
+<CLOVEROP>{
+  {SPC}*Solver{EQL} {
+    name_caller = YY_START; 
+    BEGIN(CSWSOLVER);
+  }
+}
+
 
 <WILSONOP,TMOP>{
   {SPC}*UseEvenOdd{EQL}yes {
@@ -705,7 +749,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<DBTMSOLVER,TMSOLVER>{
+<DBTMSOLVER,TMSOLVER,CSWSOLVER>{
   cg {
     optr->solver=1;
     if(myverbose) printf("  Solver set to CG line %d operator %d\n", line_of_file, current_operator);
@@ -776,7 +820,28 @@ inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to CGMMS line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
+  increigcg {
+    optr->solver = 15;
+    if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+
 }
+
+
+<CSWSOLVER>{
+  increigcg {
+    optr->solver = 15;
+    if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+
+}
+
+
+
+
+
 
 <OVSOLVER>{
   sumr {
@@ -2068,6 +2133,7 @@ int read_input(char * conf_file){
   use_preconditioning = _default_use_preconditioning;
   stout_rho = _default_stout_rho;
   stout_no_iter = _default_stout_no_iter;
+
   /* check for reread ! */ 
   phmc_compute_evs = _default_phmc_compute_evs;
   compute_evs = _default_compute_evs;
