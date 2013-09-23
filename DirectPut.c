@@ -32,6 +32,7 @@
 #endif
 #include "global.h"
 #include "DirectPut.h"
+#include "fatal_error.h"
 
 // actual number of directions
 unsigned int spi_num_dirs = NUM_DIRS;
@@ -95,7 +96,7 @@ void setup_mregions_bats_counters(const int bufferSize) {
   
   if (rc != 0) {
     fprintf(stderr, "Kernel_AllocateBaseAddressTable failed with rc=%d\n", rc);
-    exit(1);
+    fatal_error("Kernel_AllocateBaseAddressTable failed","setup_mregions_bats_counters");
   }
   
   // Receive buffer bat is set to the PA addr of the receive buffer
@@ -105,7 +106,7 @@ void setup_mregions_bats_counters(const int bufferSize) {
 				   buffersSize);
   if ( rc != 0) {
     printf("Kernel_CreateMemoryRegion failed with rc=%d\n",rc);
-    exit(1);
+    fatal_error("Kernel_CreateMemoryRegion (recv buffer) failed","setup_mregions_bats_counters");
   }
   
   uint64_t paAddr = 
@@ -119,13 +120,13 @@ void setup_mregions_bats_counters(const int bufferSize) {
   
   if(rc != 0) {
     printf("MUSPI_SetBaseAddress failed with rc=%d\n",rc);
-    exit(1);
+    fatal_error("MUSPI_SetBaseAddress (recv) failed","setup_mregions_bats_counters");
   }
   
   // Receive counter bat is set to the MU style atomic PA addr of the receive counter
   if( (uint64_t)(&recvCounter) & 0x7 ) {
     printf("ERROR: recv counter is not 8 byte aligned\n");
-    exit(1);
+    fatal_error("recv counter is not 8 byte aligned","setup_mregions_bats_counters");
   }
   
   rc = Kernel_CreateMemoryRegion ( &memRegion,
@@ -133,7 +134,7 @@ void setup_mregions_bats_counters(const int bufferSize) {
 				   sizeof(recvCounter));
   if(rc != 0) {
     printf("Kernel_CreateMemoryRegion failed with rc=%d\n",rc);
-    exit(1);
+    fatal_error("Kernel_CreateMemoryRegion (recv counter) failed","setup_mregions_bats_counters");
   }
   
   paAddr = 
@@ -149,7 +150,7 @@ void setup_mregions_bats_counters(const int bufferSize) {
   
   if(rc != 0) {
     printf("MUSPI_SetBaseAddress failed with rc=%d\n",rc);
-    exit(1);
+    fatal_error("MUSPI_SetBaseAddress (recv counter) failed","setup_mregions_bats_counters");
   }
   
   // Get the send buffers physical address
@@ -158,7 +159,7 @@ void setup_mregions_bats_counters(const int bufferSize) {
 				   buffersSize);
   if(rc != 0) {
     printf("Kernel_CreateMemoryRegion failed with rc=%d\n",rc);
-    exit(1);
+    fatal_error("Kernel_CreateMemoryRegion (send buffer) failed","setup_mregions_bats_counters");
   }
   
   sendBufPAddr = 
@@ -242,7 +243,7 @@ void create_descriptors(MUHWI_Descriptor_t * descriptors, uint64_t * messageSize
 						  &dinfo );
     if (rc != 0) {
       fprintf(stderr, "MUSPI_CreatePt2PtDirectPutDescriptor failed with rc=%d\n",rc);
-      exit(1);
+      fatal_error("MUSPI_CreatePt2PtDirectPutDescriptor failed","create_descriptors");
     }
   }
 }
@@ -456,7 +457,7 @@ void global_barrier() {
   rc = MUSPI_GIBarrierEnter ( &GIBarrier );
   if (rc) {
     printf("MUSPI_GIBarrierEnter failed returned rc = %d\n", rc);
-    exit(1);
+    fatal_error("MUSPI_GIBarrierEnter failed","global_barrier");
   }
   
   // Poll for completion of the barrier.
@@ -464,7 +465,7 @@ void global_barrier() {
   if( rc ) {
     printf("MUSPI_GIBarrierPollWithTimeout failed returned rc = %d\n", rc);
     DelayTimeBase (200000000000UL);
-    exit(1);
+    fatal_error("MUSPI_GIBarriePollWithTimeout failed","global_barrier");
   }
   return;
 }
