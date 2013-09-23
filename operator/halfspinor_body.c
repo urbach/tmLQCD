@@ -136,8 +136,10 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
     }
 #    else
     xchange_halffield32(); 
+#    ifdef _THREAD_OVERLAP
+      wait_halffield();
 #    endif
-    
+#   endif /* SPI */
 #  ifdef OMP
   }
 #  endif
@@ -163,7 +165,11 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
   phi32 = NBPointer32[2 + ieo];
   
 #ifdef OMP
+#  ifdef _THREAD_OVERLAP
+#pragma omp for schedule(guided,32)
+#  else
 #pragma omp for
+#  endif
 #else
   ix = 0;
 #endif
@@ -218,6 +224,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
   }
   
+#ifndef _THREAD_OVERLAP
 #ifdef OMP
 #pragma omp single
   {
@@ -236,6 +243,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #ifdef OMP
   }
 #endif
+#endif /* _THREAD_OVERLAP */
   
 #ifdef OMP
 #pragma omp for
@@ -370,6 +378,10 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
      
 #    else // SPI
      xchange_halffield(); 
+#      ifdef _THREAD_OVERLAP
+        wait_halffield();
+#      endif
+  
 #    endif // SPI
      
 #  ifdef OMP
@@ -398,7 +410,11 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
    phi = NBPointer[2 + ieo];
    
 #ifdef OMP
+#ifdef _THREAD_OVERLAP
+#pragma omp for schedule(guided,32)
+#else
 #pragma omp for
+#endif
 #else
    ix = 0;
 #endif
@@ -455,6 +471,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
    }
 
+#ifndef _THREAD_OVERLAP
 #ifdef OMP
 #pragma omp single
    {
@@ -473,6 +490,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #ifdef OMP
    }
 #endif
+#endif /* _THREAD_OVERLAP */
 
 
 #ifdef OMP
