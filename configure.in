@@ -248,16 +248,23 @@ if test $enable_mpi = yes; then
   fi
 
   # when using MPI and OpenMP but NOT SPI, overlapping can be made more efficient by exploiting threading 
-  AC_MSG_CHECKING(whether we want to make computation-overlapping MPI exchange more efficient through the use of threads)
+  AC_MSG_CHECKING(whether we want to make computation-overlapping MPI exchange more efficient through threads)
   if test $enable_omp = yes; then
     if test $enable_spi = no; then
-      AC_MSG_RESULT(yes)
-      AC_DEFINE(_THREAD_OVERLAP,1,use same thread for exchange and wait in halfspinor hopping matrix)
+      AC_ARG_ENABLE(threadoverlap,
+      AS_HELP_STRING([--enable-threadoverlap], [use same thread for exchange and wait in MPI halfpsinor hopping matrix [default=no]]),
+        enable_threadoverlap=$enableval, enable_threadoverlap=no)
+      if test $enable_threadoverlap = yes; then
+        AC_DEFINE(_THREAD_OVERLAP,1,use same thread for exchange and wait in halfspinor hopping matrix)
+        AC_MSG_RESULT(yes)
+      else
+        AC_MSG_RESULT(no)
+      fi
     else
-      AC_MSG_RESULT(no)
+      AC_MSG_RESULT(no - SPI in use!)
     fi
   else
-    AC_MSG_RESULT(no)
+    AC_MSG_RESULT(no - no OpenMP available!)
   fi
 fi
 
