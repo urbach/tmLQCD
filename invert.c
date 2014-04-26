@@ -372,10 +372,10 @@ if(usegpu_flag){
       s_ = calloc(no_sources_z2*VOLUMEPLUSRAND+1, sizeof(spinor));
       s  = calloc(no_sources_z2, sizeof(spinor*));
       if(s_ == NULL) { 
-	printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
+        printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
       }
       if(s == NULL) { 
-	printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
+        printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
       }
       
       
@@ -385,10 +385,10 @@ if(usegpu_flag){
 #else
         s[i] = s_+i*VOLUMEPLUSRAND;
 #endif
-	
+        
         random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
-	
-/* 	what is this here needed for?? */
+        
+/*      what is this here needed for?? */
 /*         spinor *aux_,*aux; */
 /* #if ( defined SSE || defined SSE2 || defined SSE3 ) */
 /*         aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
@@ -397,15 +397,15 @@ if(usegpu_flag){
 /*         aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
 /*         aux = aux_; */
 /* #endif */
-	
+        
         if(g_proc_id == 0) {
           printf("source %d \n", i);
         }
-	
+        
         if(compute_modenumber != 0){
           mode_number(s[i], mstarsq);
         }
-	
+        
         if(compute_topsus !=0) {
           top_sus(s[i], mstarsq);
         }
@@ -441,11 +441,14 @@ if(usegpu_flag){
       }
 
     }
-    if(SourceInfo.type == 1) {
+    if(SourceInfo.type == 1 || SourceInfo.type == 3 || SourceInfo.type == 4) {
       index_start = 0;
       index_end = 1;
     }
-
+    if(SourceInfo.type == 0 || SourceInfo.type == 2) {
+      no_samples = 1;
+    }
+    
     g_precWS=NULL;
     if(use_preconditioning == 1){
       /* todo load fftw wisdom */
