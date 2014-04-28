@@ -40,6 +40,7 @@
 #include "gamma.h"
 #include "monomial/monomial.h"
 #include "boundary.h"
+#include "read_input.h"
 #include "detratio_monomial.h"
 
 #ifdef HAVE_GPU

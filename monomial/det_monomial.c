@@ -39,6 +39,7 @@
 #include "hamiltonian_field.h"
 #include "boundary.h"
 #include "monomial/monomial.h"
+#include "read_input.h"
 #include "det_monomial.h"
 
 #ifdef HAVE_GPU
