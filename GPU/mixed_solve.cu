@@ -51,21 +51,29 @@
 #endif 
 
 
-
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <math.h>
+
+
+#ifdef HAVE_CONFIG_H
+  #include<config.h>
+#endif
 
 extern "C" {
 #include "../global.h"
-}
+#include "../solver/solver.h" 
 #include "../hamiltonian_field.h"
+}
+
+
 #include "cudaglobal.h"
-#include "../solver/solver.h"
 #include "HEADER.h"
+#include "MACROS.cuh"
 #include "cudadefs.h"
-#include <math.h>
+
 
 
 extern "C" {
@@ -92,12 +100,6 @@ extern "C" {
 }
 
 
-#ifdef HAVE_CONFIG_H
-  #include<config.h>
-#endif
-
-
-#include "MACROS.cuh"
 
 
 
@@ -565,7 +567,7 @@ void update_constants(int *grid){
   
 
   #ifndef LOWOUTPUT
-  if(g_cart_id==0){
+  if(g_cart_id==0 && g_debug_level > 2){
     printf("ka0.re = %f\n",  h0.re);
     printf("ka0.im = %f\n",  h0.im); 
     printf("ka1.re = %f\n",  h1.re);
@@ -1236,7 +1238,7 @@ extern "C" int dev_cg_eo(
      #else
        int proccount = 1;
      #endif 
-     if(g_cart_id == 0){
+     if((g_cart_id == 0) && (g_debug_level > 1)){
       	effectiveflops = i*proccount*(matrixflops + 2*2*24 + 2*24 + 2*24 + 2*2*24 + 2*24)*VOLUME/2;
       	printf("effective BENCHMARK:\n");
       	printf("\ttotal mixed solver time:   %.4e sec\n", double(stopeffective-starteffective));
@@ -2369,6 +2371,7 @@ void init_mixedsolve_fields(int eo){
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
     if(g_cart_id==0){
       printf("Error in init_mixedsolve_fields(): could not allocate fields\n");
+      printf("Error message: %s\n", cudaGetErrorString(cudaerr));
       printf("Error was %d. Aborting...\n", cudaerr);
     }
     exit(200);
@@ -2939,7 +2942,10 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
     #endif
     #endif  
   #endif
-  
+
+  //set device parameters
+  update_constants(dev_grid);     
+      
   //update the gpu single gauge_field
   update_gpu_gf(g_gauge_field);
   
@@ -3242,6 +3248,9 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
     #endif
     #endif
   #endif  
+      
+  //set device parameters
+  update_constants(dev_grid); 
   //update the gpu single gauge_field
   update_gpu_gf(g_gauge_field);
   //allocate solver fields eo!
