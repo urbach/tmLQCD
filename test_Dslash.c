@@ -73,6 +73,16 @@ int check_xchange();
 
 int main(int argc,char *argv[])
 {
+#ifdef _USE_HALFSPINOR
+	#undef _USE_HALFSPINOR
+	printf("# WARNING: USE_HALFSPINOR will be ignored (not supported here).\n");
+#endif
+
+	if(even_odd_flag)
+	{
+		even_odd_flag=0;
+		printf("# WARNING: even_odd_flag will be ignored (not supported here).\n");
+	}
   int j,j_max,k,k_max = 1;
 #ifdef HAVE_LIBLEMON
   paramsXlfInfo *xlfInfo;
