@@ -1,5 +1,5 @@
 /*
- * test_Dslash.c
+ * test_DslashBSM.c
  *
  *  Created on: Nov 13, 2014
  *      Author: mario
@@ -7,7 +7,7 @@
 
 /*******************************************************************************
 *
-* test program for Dslash (D_psi)
+* test program for beyond standard model (BSM) toy model Dslash (D_psi_BSM)
 *
 *
 *******************************************************************************/
@@ -49,7 +49,7 @@
 #include "xchange/xchange.h"
 #include "init/init.h"
 #include "test/check_geometry.h"
-#include "operator/D_psi.h"
+#include "operator/D_psi_BSM.h"
 //#include "phmc.h"
 #include "mpi_init.h"
 
@@ -266,7 +266,7 @@ int main(int argc,char *argv[])
       t1 = gettime();
 
       /* here the actual Dslash */
-      D_psi(g_spinor_field[0], g_spinor_field[1]);
+      D_psi_BSM(g_spinor_field[0], g_spinor_field[1]);
 
       t2 = gettime();
       dt=t2-t1;
