@@ -274,7 +274,7 @@ static inline void m3addandstore(spinor * restrict const r, spinor const * restr
 
 /* Serially Checked ! */
 
-void D_psi(spinor * const P, spinor * const Q){
+void D_psi_BSM(spinor * const P, spinor * const Q){
   if(P==Q){
     printf("Error in D_psi (operator.c):\n");
     printf("Arguments must be different spinor fields\n");

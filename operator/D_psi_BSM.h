@@ -23,7 +23,7 @@
 
 #include "block.h"
 
-void D_psi(spinor * const P, spinor * const Q);
+void D_psi_BSM(spinor * const P, spinor * const Q);
 
 void boundary_D_0(spinor * const r, spinor * const s, su3 *u);
 void boundary_D_1(spinor * const r, spinor * const s, su3 *u);
