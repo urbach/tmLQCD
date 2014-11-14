@@ -25,13 +25,4 @@
 
 void D_psi_BSM(spinor * const P, spinor * const Q);
 
-void boundary_D_0(spinor * const r, spinor * const s, su3 *u);
-void boundary_D_1(spinor * const r, spinor * const s, su3 *u);
-void boundary_D_2(spinor * const r, spinor * const s, su3 *u);
-void boundary_D_3(spinor * const r, spinor * const s, su3 *u);
-void boundary_D_4(spinor * const r, spinor * const s, su3 *u);
-void boundary_D_5(spinor * const r, spinor * const s, su3 *u);
-void boundary_D_6(spinor * const r, spinor * const s, su3 *u);
-void boundary_D_7(spinor * const r, spinor * const s, su3 *u);
-
 #endif

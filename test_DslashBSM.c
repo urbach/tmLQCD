@@ -49,6 +49,7 @@
 #include "xchange/xchange.h"
 #include "init/init.h"
 #include "test/check_geometry.h"
+#include "operator/D_psi.h"
 #include "operator/D_psi_BSM.h"
 //#include "phmc.h"
 #include "mpi_init.h"
