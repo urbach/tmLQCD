@@ -82,6 +82,7 @@ typedef struct
   _Complex double sc0,sc1,sc2,sc3;
 } complex_spinor;
 
+typedef double scalar;
 
 /*******************************************************************************
 *
