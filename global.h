@@ -187,7 +187,7 @@ EXTERN su3adj ** df0;
 EXTERN su3adj ** ddummy;
 
 /* scalar field (BSM toy model) */
-EXTERN double ** g_scalar_field;
+EXTERN scalar ** g_scalar_field;
 
 EXTERN int count00,count01,count10,count11,count20,count21;
 EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;
