@@ -48,6 +48,7 @@
 #include "global.h"
 #include "xchange/xchange.h"
 #include "init/init.h"
+#include "init/init_scalar_field.h"
 #include "test/check_geometry.h"
 #include "operator/D_psi.h"
 #include "operator/D_psi_BSM.h"
@@ -180,22 +181,29 @@ int main(int argc,char *argv[])
 #endif
   init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
 
-  if(even_odd_flag) {
-    j = init_spinor_field(VOLUMEPLUSRAND/2, 2*k_max+1);
-  }
-  else {
+//  if(even_odd_flag) {
+//    j = init_spinor_field(VOLUMEPLUSRAND/2, 2*k_max+1);
+//  }
+//  else {
     j = init_spinor_field(VOLUMEPLUSRAND, 2*k_max);
-  }
+//  }
 
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);
   }
-  j = init_moment_field(VOLUME, VOLUMEPLUSRAND + g_dbw2rand);
+//  j = init_moment_field(VOLUME, VOLUMEPLUSRAND + g_dbw2rand);
+//  if ( j!= 0) {
+//    fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
+//    exit(0);
+//  }
+
+  int numbScalarFields = 4;
+  j = init_scalar_field(VOLUMEPLUSRAND, numbScalarFields);
   if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
-    exit(0);
-  }
+      fprintf(stderr, "Not enough memory for scalar fields! Aborting...\n");
+      exit(0);
+    }
 
   if(g_proc_id == 0) {
     fprintf(stdout,"# The number of processes is %d \n",g_nproc);
@@ -257,8 +265,17 @@ int main(int argc,char *argv[])
 	/*initialize the pseudo-fermion fields*/
 	j_max=1;
 	sdt=0.;
-	for (k=0;k<k_max;k++) {
+	for (k=0;k<k_max;k++) { //TODO check which one is source
 	  random_spinor_field_lexic(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
+	}
+
+	// random scalar field
+	for( int s=0; s<numbScalarFields; s++ )
+	{
+		ranlxd(g_scalar_field[s], VOLUME);
+#ifdef MPI
+		generic_exchange(g_scalar_field[s], sizeof(scalar));
+#endif
 	}
 
 #ifdef MPI
