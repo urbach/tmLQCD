@@ -54,6 +54,7 @@
 #include "operator/D_psi_BSM.h"
 //#include "phmc.h"
 #include "mpi_init.h"
+#include "buffers/utils.h"
 
 #ifdef PARALLELT
 #  define SLICE (LX*LY*LZ/2)
@@ -319,7 +320,8 @@ int main(int argc,char *argv[])
   free_gauge_field();
   free_geometry_indices();
   free_spinor_field();
-  free_moment_field();
+//  free_moment_field();
+  free_scalar_field();
 #ifdef MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
