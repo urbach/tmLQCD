@@ -193,11 +193,11 @@ int main(int argc,char *argv[])
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);
   }
-//  j = init_moment_field(VOLUME, VOLUMEPLUSRAND + g_dbw2rand);
-//  if ( j!= 0) {
-//    fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
-//    exit(0);
-//  }
+  j = init_moment_field(VOLUME, VOLUMEPLUSRAND + g_dbw2rand);
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
+    exit(0);
+  }
 
   int numbScalarFields = 4;
   j = init_scalar_field(VOLUMEPLUSRAND, numbScalarFields);
@@ -320,7 +320,7 @@ int main(int argc,char *argv[])
   free_gauge_field();
   free_geometry_indices();
   free_spinor_field();
-//  free_moment_field();
+  free_moment_field();
   free_scalar_field();
 #ifdef MPI
   MPI_Barrier(MPI_COMM_WORLD);
