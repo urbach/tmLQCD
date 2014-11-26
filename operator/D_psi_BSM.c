@@ -272,8 +272,54 @@ static inline void m3addandstore(spinor * restrict const r, spinor const * restr
 }
 
 
-/* D_psi_BSM acts on bispinor fields */
+/* operator F := \phi_0 + i \gamma_5 \tau^j \phi_j acting on bispinor field */
+void F_psi(bispinor * const P, bispinor * const Q)
+{
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
 
+  int ix;
+  su3_vector phi0;
+  bispinor * restrict out;
+  bispinor const * restrict in;
+
+  /************************ loop over all lattice sites *************************/
+
+#ifdef OMP
+#pragma omp for
+#endif
+  for (ix=0;ix<VOLUME;ix++)
+  {
+	  // get local fields
+	  out  = (bispinor *) P +ix;
+	  in   = (bispinor *) Q +ix;
+
+	  // assign local scalar field \phi_0
+	  phi0.c0 = g_scalar_field[0];
+	  phi0.c1 = g_scalar_field[0];
+	  phi0.c2 = g_scalar_field[0];
+
+	  // out_up = \phi_0
+	  _vector_assign(out->sp_up.s0,phi0);
+	  _vector_assign(out->sp_up.s1,phi0);
+	  _vector_assign(out->sp_up.s2,phi0);
+	  _vector_assign(out->sp_up.s3,phi0);
+
+	  // out_up += i \gamma_5 \phi_1
+	_complex_times_vector(out->sp_up.s0,  I*g_scalar_field[1], in->sp_dn.s0);
+	_complex_times_vector(out->sp_up.s1,  I*g_scalar_field[1], in->sp_dn.s1);
+	_complex_times_vector(out->sp_up.s2, -I*g_scalar_field[1], in->sp_dn.s2);
+	_complex_times_vector(out->sp_up.s3, -I*g_scalar_field[1], in->sp_dn.s3);
+  }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+}
+
+
+/* D_psi_BSM acts on bispinor fields */
 void D_psi_BSM(bispinor * const P, bispinor * const Q){
   if(P==Q){
     printf("Error in D_psi_BSM (D_psi_BSM.c):\n");
@@ -290,6 +336,8 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
   xchange_lexicfield(&Q->sp_up);
   xchange_lexicfield(&Q->sp_dn);
 # endif
+
+  // call F_psi here
 
 #ifdef OMP
 #pragma omp parallel
