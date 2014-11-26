@@ -23,6 +23,6 @@
 
 #include "block.h"
 
-void D_psi_BSM(spinor * const P, spinor * const Q);
+void D_psi_BSM(bispinor * const P, bispinor * const Q);
 
 #endif
