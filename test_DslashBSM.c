@@ -186,11 +186,11 @@ int main(int argc,char *argv[])
 //    j = init_spinor_field(VOLUMEPLUSRAND/2, 2*k_max+1);
 //  }
 //  else {
-    j = init_spinor_field(VOLUMEPLUSRAND, 2*k_max);
+    j = init_bispinor_field(VOLUMEPLUSRAND, 2*k_max);
 //  }
 
   if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
+    fprintf(stderr, "Not enough memory for bispinor fields! Aborting...\n");
     exit(0);
   }
   j = init_moment_field(VOLUME, VOLUMEPLUSRAND + g_dbw2rand);
@@ -267,7 +267,8 @@ int main(int argc,char *argv[])
 	j_max=1;
 	sdt=0.;
 	for (k=0;k<k_max;k++) { //TODO check which one is source
-	  random_spinor_field_lexic(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
+	  random_spinor_field_lexic(g_bispinor_field[k]->sp_up, reproduce_randomnumber_flag, RN_GAUSS);
+	  random_spinor_field_lexic(g_bispinor_field[k]->sp_dn, reproduce_randomnumber_flag, RN_GAUSS);
 	}
 
 	// random scalar field
@@ -285,7 +286,7 @@ int main(int argc,char *argv[])
       t1 = gettime();
 
       /* here the actual Dslash */
-      D_psi_BSM(g_spinor_field[0], g_spinor_field[1]);
+      D_psi_BSM(g_bispinor_field[0], g_bispinor_field[1]);
 
       t2 = gettime();
       dt=t2-t1;
@@ -319,7 +320,7 @@ int main(int argc,char *argv[])
 #endif
   free_gauge_field();
   free_geometry_indices();
-  free_spinor_field();
+  free_bispinor_field();
   free_moment_field();
   free_scalar_field();
 #ifdef MPI

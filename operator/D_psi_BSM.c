@@ -23,7 +23,7 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Action of a Dirac operator D (Wilson or twisted) on a given spinor field
+ * Action of a Dirac operator D (BSM toy model) on a given bispinor field
  *
  * various versions including a block version.
  *
@@ -272,12 +272,12 @@ static inline void m3addandstore(spinor * restrict const r, spinor const * restr
 }
 
 
-/* Serially Checked ! */
+/* D_psi_BSM acts on bispinor fields */
 
-void D_psi_BSM(spinor * const P, spinor * const Q){
+void D_psi_BSM(bispinor * const P, bispinor * const Q){
   if(P==Q){
-    printf("Error in D_psi (operator.c):\n");
-    printf("Arguments must be different spinor fields\n");
+    printf("Error in D_psi_BSM (D_psi_BSM.c):\n");
+    printf("Arguments must be different bispinor fields\n");
     printf("Program aborted\n");
     exit(1);
   }
@@ -314,8 +314,8 @@ void D_psi_BSM(spinor * const P, spinor * const Q){
 #endif
   for (ix=0;ix<VOLUME;ix++)
   {
-    rr  = (spinor *) P +ix;
-    s  = (spinor *) Q +ix;
+    rr  = (spinor *) P->sp_up +ix;
+    s   = (spinor *) Q->sp_up +ix;
 
     _complex_times_vector(tmpr.s0, rho1, s->s0);
     _complex_times_vector(tmpr.s1, rho1, s->s1);
@@ -324,49 +324,49 @@ void D_psi_BSM(spinor * const P, spinor * const Q){
 
     /******************************* direction +0 *********************************/
     iy=g_iup[ix][0];
-    sp = (spinor *) Q +iy;
+    sp = (spinor *) Q->sp_up +iy;
     up=&g_gauge_field[ix][0];
     p0add(&tmpr, sp, up, phase_0);
 
     /******************************* direction -0 *********************************/
     iy=g_idn[ix][0];
-    sm  = (spinor *) Q +iy;
+    sm  = (spinor *) Q->sp_up +iy;
     um=&g_gauge_field[iy][0];
     m0add(&tmpr, sm, um, phase_0);
 
     /******************************* direction +1 *********************************/
     iy=g_iup[ix][1];
-    sp = (spinor *) Q +iy;
+    sp = (spinor *) Q->sp_up +iy;
     up=&g_gauge_field[ix][1];
     p1add(&tmpr, sp, up, phase_1);
 
     /******************************* direction -1 *********************************/
     iy=g_idn[ix][1];
-    sm = (spinor *) Q +iy;
+    sm = (spinor *) Q->sp_up +iy;
     um=&g_gauge_field[iy][1];
     m1add(&tmpr, sm, um, phase_1);
 
     /******************************* direction +2 *********************************/
     iy=g_iup[ix][2];
-    sp = (spinor *) Q +iy;
+    sp = (spinor *) Q->sp_up +iy;
     up=&g_gauge_field[ix][2];
     p2add(&tmpr, sp, up, phase_2);
 
     /******************************* direction -2 *********************************/
     iy=g_idn[ix][2];
-    sm = (spinor *) Q +iy;
+    sm = (spinor *) Q->sp_up +iy;
     um=&g_gauge_field[iy][2];
     m2add(&tmpr, sm, um, phase_2);
 
     /******************************* direction +3 *********************************/
     iy=g_iup[ix][3];
-    sp = (spinor *) Q +iy;
+    sp = (spinor *) Q->sp_up +iy;
     up=&g_gauge_field[ix][3];
     p3add(&tmpr, sp, up, phase_3);
 
     /******************************* direction -3 *********************************/
     iy=g_idn[ix][3];
-    sm = (spinor *) Q +iy;
+    sm = (spinor *) Q->sp_up +iy;
     um=&g_gauge_field[iy][3];
     m3addandstore(rr, sm, um, phase_3, &tmpr);
   }
