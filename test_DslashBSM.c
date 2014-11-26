@@ -269,7 +269,12 @@ int main(int argc,char *argv[])
 	for (k=0;k<k_max;k++) { //TODO check which one is source
 	  random_spinor_field_lexic(g_bispinor_field[k]->sp_up, reproduce_randomnumber_flag, RN_GAUSS);
 	  random_spinor_field_lexic(g_bispinor_field[k]->sp_dn, reproduce_randomnumber_flag, RN_GAUSS);
+# if defined MPI
+	xchange_lexicfield(&g_bispinor_field[k]->sp_up);
+	xchange_lexicfield(&g_bispinor_field[k]->sp_dn);
+# endif
 	}
+
 
 	// random scalar field
 	for( int s=0; s<numbScalarFields; s++ )
