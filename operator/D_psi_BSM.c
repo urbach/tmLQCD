@@ -297,9 +297,9 @@ void F_psi(bispinor * const P, bispinor * const Q)
 	  in   = (bispinor *) Q +ix;
 
 	  // assign local scalar field \phi_0
-	  phi0.c0 = g_scalar_field[0];
-	  phi0.c1 = g_scalar_field[0];
-	  phi0.c2 = g_scalar_field[0];
+	  phi0.c0 = g_scalar_field[0] + I*0;
+	  phi0.c1 = g_scalar_field[0] + I*0;
+	  phi0.c2 = g_scalar_field[0] + I*0;
 
 	  // out_up = \phi_0
 	  _vector_assign(out->sp_up.s0,phi0);
@@ -308,10 +308,10 @@ void F_psi(bispinor * const P, bispinor * const Q)
 	  _vector_assign(out->sp_up.s3,phi0);
 
 	  // out_up += i \gamma_5 \phi_1
-	_complex_times_vector(out->sp_up.s0,  I*g_scalar_field[1], in->sp_dn.s0);
-	_complex_times_vector(out->sp_up.s1,  I*g_scalar_field[1], in->sp_dn.s1);
-	_complex_times_vector(out->sp_up.s2, -I*g_scalar_field[1], in->sp_dn.s2);
-	_complex_times_vector(out->sp_up.s3, -I*g_scalar_field[1], in->sp_dn.s3);
+	_complex_times_vector(out->sp_up.s0,  I*(*g_scalar_field[1]), in->sp_dn.s0);
+	_complex_times_vector(out->sp_up.s1,  I*(*g_scalar_field[1]), in->sp_dn.s1);
+	_complex_times_vector(out->sp_up.s2, -I*(*g_scalar_field[1]), in->sp_dn.s2);
+	_complex_times_vector(out->sp_up.s3, -I*(*g_scalar_field[1]), in->sp_dn.s3);
   }
 #ifdef OMP
   } /* OpenMP closing brace */
