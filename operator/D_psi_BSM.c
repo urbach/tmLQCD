@@ -47,6 +47,7 @@
 #include "block.h"
 #include "operator/D_psi.h"
 #include "solver/dirac_operator_eigenvectors.h"
+#include "buffers/utils.h"
 
 
 
@@ -344,10 +345,9 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
       update_backward_gauge(g_gauge_field);
   }
 #endif
-# if defined MPI
-  xchange_lexicfield(&Q->sp_up);
-  xchange_lexicfield(&Q->sp_dn);
-# endif
+#ifdef MPI
+  generic_exchange(Q, sizeof(bispinor));
+#endif
 
   // call F_psi here
 
