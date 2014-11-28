@@ -267,8 +267,8 @@ int main(int argc,char *argv[])
 	j_max=1;
 	sdt=0.;
 	for (k=0;k<k_max;k++) { //TODO check which one is source
-	  random_spinor_field_lexic(&(g_bispinor_field[k]), reproduce_randomnumber_flag, RN_GAUSS);
-	  random_spinor_field_lexic(&(g_bispinor_field[k]+VOLUME), reproduce_randomnumber_flag, RN_GAUSS);
+	  random_spinor_field_lexic(g_bispinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
+	  random_spinor_field_lexic(g_bispinor_field[k]+VOLUME, reproduce_randomnumber_flag, RN_GAUSS);
 #if defined MPI
 //	xchange_lexicfield(&g_bispinor_field[k]->sp_up);
 //	xchange_lexicfield(&g_bispinor_field[k]->sp_dn);
