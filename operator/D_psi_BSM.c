@@ -281,7 +281,13 @@ void F_psi(bispinor * const P, bispinor * const Q)
 #endif
 
   int ix;
-  su3_vector phi0;
+  scalar const * phi0;
+  scalar const * phi1;
+  scalar const * phi2;
+  scalar const * phi3;
+
+  su3_vector phi0_vec;
+
   bispinor * restrict out;
   bispinor const * restrict in;
 
@@ -292,26 +298,32 @@ void F_psi(bispinor * const P, bispinor * const Q)
 #endif
   for (ix=0;ix<VOLUME;ix++)
   {
-	  // get local fields
-	  out  = (bispinor *) P +ix;
-	  in   = (bispinor *) Q +ix;
+	  // get local spinor fields
+	  out = P + ix;
+	  in  = Q + ix;
 
-	  // assign local scalar field \phi_0
-	  phi0.c0 = g_scalar_field[0] + I*0;
-	  phi0.c1 = g_scalar_field[0] + I*0;
-	  phi0.c2 = g_scalar_field[0] + I*0;
+	  // get local scalar fields
+	  phi0 = g_scalar_field[0] + ix;
+	  phi1 = g_scalar_field[1] + ix;
+	  phi2 = g_scalar_field[2] + ix;
+	  phi3 = g_scalar_field[3] + ix;
+
+	  // assign the color vector (1,1,1) * \phi_0
+	  phi0_vec.c0 = *phi0;
+	  phi0_vec.c1 = *phi0;
+	  phi0_vec.c2 = *phi0;
 
 	  // out_up = \phi_0
-	  _vector_assign(out->sp_up.s0,phi0);
-	  _vector_assign(out->sp_up.s1,phi0);
-	  _vector_assign(out->sp_up.s2,phi0);
-	  _vector_assign(out->sp_up.s3,phi0);
+	  _vector_assign(out->sp_up.s0,phi0_vec);
+	  _vector_assign(out->sp_up.s1,phi0_vec);
+	  _vector_assign(out->sp_up.s2,phi0_vec);
+	  _vector_assign(out->sp_up.s3,phi0_vec);
 
 	  // out_up += i \gamma_5 \phi_1
-	_complex_times_vector(out->sp_up.s0,  I*(*g_scalar_field[1]), in->sp_dn.s0);
-	_complex_times_vector(out->sp_up.s1,  I*(*g_scalar_field[1]), in->sp_dn.s1);
-	_complex_times_vector(out->sp_up.s2, -I*(*g_scalar_field[1]), in->sp_dn.s2);
-	_complex_times_vector(out->sp_up.s3, -I*(*g_scalar_field[1]), in->sp_dn.s3);
+	_complex_times_vector(out->sp_up.s0,  I*(*phi1), in->sp_dn.s0);
+	_complex_times_vector(out->sp_up.s1,  I*(*phi1), in->sp_dn.s1);
+	_complex_times_vector(out->sp_up.s2, -I*(*phi1), in->sp_dn.s2);
+	_complex_times_vector(out->sp_up.s3, -I*(*phi1), in->sp_dn.s3);
   }
 #ifdef OMP
   } /* OpenMP closing brace */
