@@ -287,8 +287,6 @@ void F_psi(bispinor * const P, bispinor * const Q)
   scalar const * phi2;
   scalar const * phi3;
 
-  su3_vector phi0_vec;
-
   bispinor * restrict out;
   bispinor const * restrict in;
 
@@ -299,7 +297,7 @@ void F_psi(bispinor * const P, bispinor * const Q)
 #endif
   for (ix=0;ix<VOLUME;ix++)
   {
-	  // get local spinor fields
+	  // get local bispinor fields
 	  out = P + ix;
 	  in  = Q + ix;
 
@@ -309,22 +307,29 @@ void F_psi(bispinor * const P, bispinor * const Q)
 	  phi2 = g_scalar_field[2] + ix;
 	  phi3 = g_scalar_field[3] + ix;
 
-	  // assign the color vector (1,1,1) * \phi_0
-	  phi0_vec.c0 = *phi0;
-	  phi0_vec.c1 = *phi0;
-	  phi0_vec.c2 = *phi0;
+	  // out_up = \phi_0 * in_up
+	  _vector_mul(out->sp_up.s0, (*phi0), in->sp_up.s0);
+	  _vector_mul(out->sp_up.s0, (*phi0), in->sp_up.s0);
+	  _vector_mul(out->sp_up.s0, (*phi0), in->sp_up.s0);
+	  _vector_mul(out->sp_up.s0, (*phi0), in->sp_up.s0);
 
-	  // out_up = \phi_0
-	  _vector_assign(out->sp_up.s0,phi0_vec);
-	  _vector_assign(out->sp_up.s1,phi0_vec);
-	  _vector_assign(out->sp_up.s2,phi0_vec);
-	  _vector_assign(out->sp_up.s3,phi0_vec);
+	  // out_up += i \gamma_5 \phi_1 * in_dn
+	  _vector_add_i_mul(out->sp_up.s0,  (*phi1), in->sp_dn.s0);
+	  _vector_add_i_mul(out->sp_up.s1,  (*phi1), in->sp_dn.s1);
+	  _vector_add_i_mul(out->sp_up.s2, -(*phi1), in->sp_dn.s2);
+	  _vector_add_i_mul(out->sp_up.s3, -(*phi1), in->sp_dn.s3);
 
-	  // out_up += i \gamma_5 \phi_1
-	_complex_times_vector(out->sp_up.s0,  I*(*phi1), in->sp_dn.s0);
-	_complex_times_vector(out->sp_up.s1,  I*(*phi1), in->sp_dn.s1);
-	_complex_times_vector(out->sp_up.s2, -I*(*phi1), in->sp_dn.s2);
-	_complex_times_vector(out->sp_up.s3, -I*(*phi1), in->sp_dn.s3);
+	  // out_up += \gamma_5 \phi_2 * in_dn
+	  _vector_add_mul(out->sp_up.s0,  (*phi2), in->sp_dn.s0);
+	  _vector_add_mul(out->sp_up.s1,  (*phi2), in->sp_dn.s1);
+	  _vector_add_mul(out->sp_up.s2, -(*phi2), in->sp_dn.s2);
+	  _vector_add_mul(out->sp_up.s3, -(*phi2), in->sp_dn.s3);
+
+	  // out_up += i \gamma_5 \phi_3 * in_dn
+	  _vector_add_i_mul(out->sp_up.s0,  (*phi3), in->sp_up.s0);
+	  _vector_add_i_mul(out->sp_up.s1,  (*phi3), in->sp_up.s1);
+	  _vector_add_i_mul(out->sp_up.s2, -(*phi3), in->sp_up.s2);
+	  _vector_add_i_mul(out->sp_up.s3, -(*phi3), in->sp_up.s3);
   }
 #ifdef OMP
   } /* OpenMP closing brace */
