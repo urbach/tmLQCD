@@ -282,10 +282,10 @@ void F_psi(bispinor * const P, bispinor * const Q)
 #endif
 
   int ix;
-  scalar const * phi0;
-  scalar const * phi1;
-  scalar const * phi2;
-  scalar const * phi3;
+  scalar phi0;
+  scalar phi1;
+  scalar phi2;
+  scalar phi3;
 
   bispinor * restrict out;
   bispinor const * restrict in;
@@ -302,34 +302,61 @@ void F_psi(bispinor * const P, bispinor * const Q)
 	  in  = Q + ix;
 
 	  // get local scalar fields
-	  phi0 = g_scalar_field[0] + ix;
-	  phi1 = g_scalar_field[1] + ix;
-	  phi2 = g_scalar_field[2] + ix;
-	  phi3 = g_scalar_field[3] + ix;
+	  phi0 = *(g_scalar_field[0] + ix);
+	  phi1 = *(g_scalar_field[1] + ix);
+	  phi2 = *(g_scalar_field[2] + ix);
+	  phi3 = *(g_scalar_field[3] + ix);
 
+	  // flavour 1:
 	  // out_up = \phi_0 * in_up
-	  _vector_mul(out->sp_up.s0, (*phi0), in->sp_up.s0);
-	  _vector_mul(out->sp_up.s0, (*phi0), in->sp_up.s0);
-	  _vector_mul(out->sp_up.s0, (*phi0), in->sp_up.s0);
-	  _vector_mul(out->sp_up.s0, (*phi0), in->sp_up.s0);
+	  _vector_mul(out->sp_up.s0, phi0, in->sp_up.s0);
+	  _vector_mul(out->sp_up.s1, phi0, in->sp_up.s1);
+	  _vector_mul(out->sp_up.s2, phi0, in->sp_up.s2);
+	  _vector_mul(out->sp_up.s3, phi0, in->sp_up.s3);
 
 	  // out_up += i \gamma_5 \phi_1 * in_dn
-	  _vector_add_i_mul(out->sp_up.s0,  (*phi1), in->sp_dn.s0);
-	  _vector_add_i_mul(out->sp_up.s1,  (*phi1), in->sp_dn.s1);
-	  _vector_add_i_mul(out->sp_up.s2, -(*phi1), in->sp_dn.s2);
-	  _vector_add_i_mul(out->sp_up.s3, -(*phi1), in->sp_dn.s3);
+	  _vector_add_i_mul(out->sp_up.s0,  phi1, in->sp_dn.s0);
+	  _vector_add_i_mul(out->sp_up.s1,  phi1, in->sp_dn.s1);
+	  _vector_add_i_mul(out->sp_up.s2, -phi1, in->sp_dn.s2);
+	  _vector_add_i_mul(out->sp_up.s3, -phi1, in->sp_dn.s3);
 
 	  // out_up += \gamma_5 \phi_2 * in_dn
-	  _vector_add_mul(out->sp_up.s0,  (*phi2), in->sp_dn.s0);
-	  _vector_add_mul(out->sp_up.s1,  (*phi2), in->sp_dn.s1);
-	  _vector_add_mul(out->sp_up.s2, -(*phi2), in->sp_dn.s2);
-	  _vector_add_mul(out->sp_up.s3, -(*phi2), in->sp_dn.s3);
+	  _vector_add_mul(out->sp_up.s0,  phi2, in->sp_dn.s0);
+	  _vector_add_mul(out->sp_up.s1,  phi2, in->sp_dn.s1);
+	  _vector_add_mul(out->sp_up.s2, -phi2, in->sp_dn.s2);
+	  _vector_add_mul(out->sp_up.s3, -phi2, in->sp_dn.s3);
 
-	  // out_up += i \gamma_5 \phi_3 * in_dn
-	  _vector_add_i_mul(out->sp_up.s0,  (*phi3), in->sp_up.s0);
-	  _vector_add_i_mul(out->sp_up.s1,  (*phi3), in->sp_up.s1);
-	  _vector_add_i_mul(out->sp_up.s2, -(*phi3), in->sp_up.s2);
-	  _vector_add_i_mul(out->sp_up.s3, -(*phi3), in->sp_up.s3);
+	  // out_up += i \gamma_5 \phi_3 * in_up
+	  _vector_add_i_mul(out->sp_up.s0,  phi3, in->sp_up.s0);
+	  _vector_add_i_mul(out->sp_up.s1,  phi3, in->sp_up.s1);
+	  _vector_add_i_mul(out->sp_up.s2, -phi3, in->sp_up.s2);
+	  _vector_add_i_mul(out->sp_up.s3, -phi3, in->sp_up.s3);
+
+
+	  // flavour 2:
+	  // out_dn = \phi_0 * in_dn
+	  _vector_mul(out->sp_dn.s0, phi0, in->sp_dn.s0);
+	  _vector_mul(out->sp_dn.s1, phi0, in->sp_dn.s1);
+	  _vector_mul(out->sp_dn.s2, phi0, in->sp_dn.s2);
+	  _vector_mul(out->sp_dn.s3, phi0, in->sp_dn.s3);
+
+	  // out_dn += i \gamma_5 \phi_1 * in_up
+	  _vector_add_i_mul(out->sp_dn.s0,  phi1, in->sp_up.s0);
+	  _vector_add_i_mul(out->sp_dn.s1,  phi1, in->sp_up.s1);
+	  _vector_add_i_mul(out->sp_dn.s2, -phi1, in->sp_up.s2);
+	  _vector_add_i_mul(out->sp_dn.s3, -phi1, in->sp_up.s3);
+
+	  // out_dn += \gamma_5 \phi_2 * in_up
+	  _vector_add_mul(out->sp_dn.s0, -phi2, in->sp_up.s0);
+	  _vector_add_mul(out->sp_dn.s1, -phi2, in->sp_up.s1);
+	  _vector_add_mul(out->sp_dn.s2,  phi2, in->sp_up.s2);
+	  _vector_add_mul(out->sp_dn.s3,  phi2, in->sp_up.s3);
+
+	  // out_dn += i \gamma_5 \phi_3 * in_dn
+	  _vector_add_i_mul(out->sp_dn.s0, -phi3, in->sp_dn.s0);
+	  _vector_add_i_mul(out->sp_dn.s1, -phi3, in->sp_dn.s1);
+	  _vector_add_i_mul(out->sp_dn.s2,  phi3, in->sp_dn.s2);
+	  _vector_add_i_mul(out->sp_dn.s3,  phi3, in->sp_dn.s3);
   }
 #ifdef OMP
   } /* OpenMP closing brace */
