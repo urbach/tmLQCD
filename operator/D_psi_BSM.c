@@ -52,6 +52,7 @@
 // TODO they should go somewhere else, e.g. input file
 double eta=1.0;
 double rho=1.0;
+double m0=0.0;
 
 
 /* operation out(x) += F(y)*in(x)
@@ -369,21 +370,21 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
 
     // the local part (not local in phi)
 
-    // tmpr = 0
-    _vector_null(rr->sp_up.s0);
-    _vector_null(rr->sp_up.s1);
-    _vector_null(rr->sp_up.s2);
-    _vector_null(rr->sp_up.s3);
-    _vector_null(rr->sp_dn.s0);
-    _vector_null(rr->sp_dn.s1);
-    _vector_null(rr->sp_dn.s2);
-    _vector_null(rr->sp_dn.s3);
+    // tmpr = m0*Q(x)
+    _vector_mul(rr->sp_up.s0, m0, s->sp_up.s0);
+    _vector_mul(rr->sp_up.s1, m0, s->sp_up.s1);
+    _vector_mul(rr->sp_up.s2, m0, s->sp_up.s2);
+    _vector_mul(rr->sp_up.s3, m0, s->sp_up.s3);
+    _vector_mul(rr->sp_dn.s0, m0, s->sp_up.s0);
+    _vector_mul(rr->sp_dn.s1, m0, s->sp_up.s1);
+    _vector_mul(rr->sp_dn.s2, m0, s->sp_up.s2);
+    _vector_mul(rr->sp_dn.s3, m0, s->sp_up.s3);
 
 
-    // tmpr += (\eta+2*\rho) * F(x)*\psi(x)
+    // tmpr += (\eta+2*\rho) * F(x)*Q(x)
     Fadd(rr, s, phi, eta+2.0*rho);
 
-    // tmpr += \sum_\mu (\rho/4) * F(x+-\mu)*\psi
+    // tmpr += \sum_\mu (\rho/4) * F(x+-\mu)*Q
     for( int mu=0; mu<4; mu++ )
     {
 		Fadd(rr, s, phip[mu], 0.25*rho);
@@ -391,7 +392,8 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
 	}
 
 
-    // the hopping part
+    // the hopping part:
+    // tmpr += +-1/2 \sum_\mu (\gamma_\mu -+ \rho/2*F(x) -+ \rho/2*F(x+-\mu)*U_{+-\mu}(x)*Q(x+-\mu)
     /******************************* direction +0 *********************************/
     iy=g_iup[ix][0];
     sp = (bispinor *) Q +iy;
