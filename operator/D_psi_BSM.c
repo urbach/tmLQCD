@@ -223,15 +223,15 @@ static inline void p1add(bispinor * restrict const tmpr, bispinor const * restri
   bispinor_times_phase_times_u(&us, phase, u, s);
 
   // tmpr += \gamma_0*us
-  _vector_add_assign(tmpr->sp_up.s0, us.sp_up.s2);
-  _vector_add_assign(tmpr->sp_up.s1, us.sp_up.s3);
-  _vector_add_assign(tmpr->sp_up.s2, us.sp_up.s0);
-  _vector_add_assign(tmpr->sp_up.s3, us.sp_up.s1);
+  _vector_i_add_assign(tmpr->sp_up.s0, us.sp_up.s3);
+  _vector_i_add_assign(tmpr->sp_up.s1, us.sp_up.s2);
+  _vector_i_sub_assign(tmpr->sp_up.s2, us.sp_up.s1);
+  _vector_i_sub_assign(tmpr->sp_up.s3, us.sp_up.s0);
 
-  _vector_add_assign(tmpr->sp_dn.s0, us.sp_dn.s2);
-  _vector_add_assign(tmpr->sp_dn.s1, us.sp_dn.s3);
-  _vector_add_assign(tmpr->sp_dn.s2, us.sp_dn.s0);
-  _vector_add_assign(tmpr->sp_dn.s3, us.sp_dn.s1);
+  _vector_i_add_assign(tmpr->sp_dn.s0, us.sp_dn.s3);
+  _vector_i_add_assign(tmpr->sp_dn.s1, us.sp_dn.s2);
+  _vector_i_sub_assign(tmpr->sp_dn.s2, us.sp_dn.s1);
+  _vector_i_sub_assign(tmpr->sp_dn.s3, us.sp_dn.s0);
 
   // tmpr += F*us
   Fadd(tmpr, &us, phi,  phaseF);
@@ -255,15 +255,15 @@ static inline void p2add(bispinor * restrict const tmpr, bispinor const * restri
   bispinor_times_phase_times_u(&us, phase, u, s);
 
   // tmpr += \gamma_0*us
-  _vector_add_assign(tmpr->sp_up.s0, us.sp_up.s2);
-  _vector_add_assign(tmpr->sp_up.s1, us.sp_up.s3);
-  _vector_add_assign(tmpr->sp_up.s2, us.sp_up.s0);
-  _vector_add_assign(tmpr->sp_up.s3, us.sp_up.s1);
+  _vector_add_assign(tmpr->sp_up.s0, us.sp_up.s3);
+  _vector_sub_assign(tmpr->sp_up.s1, us.sp_up.s2);
+  _vector_sub_assign(tmpr->sp_up.s2, us.sp_up.s1);
+  _vector_add_assign(tmpr->sp_up.s3, us.sp_up.s0);
 
-  _vector_add_assign(tmpr->sp_dn.s0, us.sp_dn.s2);
-  _vector_add_assign(tmpr->sp_dn.s1, us.sp_dn.s3);
-  _vector_add_assign(tmpr->sp_dn.s2, us.sp_dn.s0);
-  _vector_add_assign(tmpr->sp_dn.s3, us.sp_dn.s1);
+  _vector_add_assign(tmpr->sp_dn.s0, us.sp_dn.s3);
+  _vector_sub_assign(tmpr->sp_dn.s1, us.sp_dn.s2);
+  _vector_sub_assign(tmpr->sp_dn.s2, us.sp_dn.s1);
+  _vector_add_assign(tmpr->sp_dn.s3, us.sp_dn.s0);
 
   // tmpr += F*us
   Fadd(tmpr, &us, phi,  phaseF);
@@ -287,15 +287,15 @@ static inline void p3add(bispinor * restrict const tmpr, bispinor const * restri
   bispinor_times_phase_times_u(&us, phase, u, s);
 
   // tmpr += \gamma_0*us
-  _vector_add_assign(tmpr->sp_up.s0, us.sp_up.s2);
-  _vector_add_assign(tmpr->sp_up.s1, us.sp_up.s3);
-  _vector_add_assign(tmpr->sp_up.s2, us.sp_up.s0);
-  _vector_add_assign(tmpr->sp_up.s3, us.sp_up.s1);
+  _vector_i_add_assign(tmpr->sp_up.s0, us.sp_up.s2);
+  _vector_i_sub_assign(tmpr->sp_up.s1, us.sp_up.s3);
+  _vector_i_sub_assign(tmpr->sp_up.s2, us.sp_up.s0);
+  _vector_i_add_assign(tmpr->sp_up.s3, us.sp_up.s1);
 
-  _vector_add_assign(tmpr->sp_dn.s0, us.sp_dn.s2);
-  _vector_add_assign(tmpr->sp_dn.s1, us.sp_dn.s3);
-  _vector_add_assign(tmpr->sp_dn.s2, us.sp_dn.s0);
-  _vector_add_assign(tmpr->sp_dn.s3, us.sp_dn.s1);
+  _vector_i_add_assign(tmpr->sp_dn.s0, us.sp_dn.s2);
+  _vector_i_sub_assign(tmpr->sp_dn.s1, us.sp_dn.s3);
+  _vector_i_sub_assign(tmpr->sp_dn.s2, us.sp_dn.s0);
+  _vector_i_add_assign(tmpr->sp_dn.s3, us.sp_dn.s1);
 
   // tmpr += F*us
   Fadd(tmpr, &us, phi,  phaseF);
