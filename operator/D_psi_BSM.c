@@ -65,8 +65,13 @@ double rho=1.0;
 
 void Fadd(bispinor * const out, const bispinor * const in, const scalar * const phi, const double c)
 {
-  // TODO static OMP
-  spinor tmp;
+#ifdef OMP
+#define static
+#endif
+  static spinor tmp;
+#ifdef OMP
+#undef static
+#endif
 
   // flavour 1:
   // tmp_up = \phi_0 * in_up
@@ -132,6 +137,43 @@ void Fadd(bispinor * const out, const bispinor * const in, const scalar * const 
   _vector_add_mul(out->sp_dn.s3,c,tmp.s3);
 }
 
+static inline void bispinor_times_phase_times_u(bispinor * restrict const us, const _Complex double phase,
+		su3 const * restrict const u, bispinor const * restrict const s)
+{
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi;
+#ifdef OMP
+#undef static
+#endif
+
+  _su3_multiply(chi, (*u), s->sp_up.s0);
+  _complex_times_vector(us.sp_up.s0, phase, chi);
+
+  _su3_multiply(chi, (*u), s->sp_up.s1);
+  _complex_times_vector(us.sp_up.s1, phase, chi);
+
+  _su3_multiply(chi, (*u), s->sp_up.s2);
+  _complex_times_vector(us.sp_up.s2, phase, chi);
+
+  _su3_multiply(chi, (*u), s->sp_up.s3);
+  _complex_times_vector(us.sp_up.s3, phase, chi);
+
+  _su3_multiply(chi, (*u), s->sp_dn.s0);
+  _complex_times_vector(us.sp_dn.s0, phase, chi);
+
+  _su3_multiply(chi, (*u), s->sp_dn.s1);
+  _complex_times_vector(us.sp_dn.s1, phase, chi);
+
+  _su3_multiply(chi, (*u), s->sp_dn.s2);
+  _complex_times_vector(us.sp_dn.s2, phase, chi);
+
+  _su3_multiply(chi, (*u), s->sp_dn.s3);
+  _complex_times_vector(us.sp_dn.s3, phase, chi);
+
+  return;
+}
 
 static inline void p0add(bispinor * restrict const tmpr , bispinor const * restrict const s,
 			 su3 const * restrict const u, const _Complex double phase,
@@ -140,24 +182,15 @@ static inline void p0add(bispinor * restrict const tmpr , bispinor const * restr
 #ifdef OMP
 #define static
 #endif
-//  static su3_vector chi, psi;
   static bispinor us;
 #ifdef OMP
 #undef static
 #endif
 
-  // us = u*s
-  _su3_multiply(us.sp_up.s0, (*u), s->sp_up.s0);
-  _su3_multiply(us.sp_up.s1, (*u), s->sp_up.s1);
-  _su3_multiply(us.sp_up.s2, (*u), s->sp_up.s2);
-  _su3_multiply(us.sp_up.s3, (*u), s->sp_up.s3);
+  // us = phase*u*s
+  bispinor_times_phase_times_u(&us, phase, u, s);
 
-  _su3_multiply(us.sp_dn.s0, (*u), s->sp_dn.s0);
-  _su3_multiply(us.sp_dn.s1, (*u), s->sp_dn.s1);
-  _su3_multiply(us.sp_dn.s2, (*u), s->sp_dn.s2);
-  _su3_multiply(us.sp_dn.s3, (*u), s->sp_dn.s3);
-
-  // tmpr += \gamma_0*tmp
+  // tmpr += \gamma_0*us
   _vector_add_assign(tmpr->sp_up.s0, us.sp_up.s2);
   _vector_add_assign(tmpr->sp_up.s1, us.sp_up.s3);
   _vector_add_assign(tmpr->sp_up.s2, us.sp_up.s0);
@@ -168,25 +201,17 @@ static inline void p0add(bispinor * restrict const tmpr , bispinor const * restr
   _vector_add_assign(tmpr->sp_dn.s2, us.sp_dn.s0);
   _vector_add_assign(tmpr->sp_dn.s3, us.sp_dn.s1);
 
-  // tmpr += F*tmp
+  // tmpr += F*us
   Fadd(tmpr, &us, phi,  -0.5*rho);
   Fadd(tmpr, &us, phip, -0.5*rho);
-
-
-//  _vector_add(psi,s->s0, s->s2);
-//  _su3_multiply(chi, (*u), psi);
-//
-//  _complex_times_vector(psi, phase, chi);
-//  _vector_add_assign(tmpr->s0, psi);
-//  _vector_add_assign(tmpr->s2, psi);
-
 
   return;
 }
 
 
 static inline void m0add(spinor * restrict const tmpr, spinor const * restrict const s, 
-			 su3 const * restrict const u, const _Complex double phase) {
+			 su3 const * restrict const u, const _Complex double phase,
+			 const scalar * const phi, const scalar * const phip) {
 #ifdef OMP
 #define static
 #endif
@@ -213,7 +238,8 @@ static inline void m0add(spinor * restrict const tmpr, spinor const * restrict c
 }
 
 static inline void p1add(spinor * restrict const tmpr, spinor const * restrict const s, 
-			 su3 const * restrict const u, const _Complex double phase) {
+			 su3 const * restrict const u, const _Complex double phase,
+			 const scalar * const phi, const scalar * const phip) {
 #ifdef OMP
 #define static
 #endif
@@ -240,7 +266,8 @@ static inline void p1add(spinor * restrict const tmpr, spinor const * restrict c
 }
 
 static inline void m1add(spinor * restrict const tmpr, spinor const * restrict const s, 
-			 su3 const * restrict const u, const _Complex double phase) {
+			 su3 const * restrict const u, const _Complex double phase,
+			 const scalar * const phi, const scalar * const phip) {
 #ifdef OMP
 #define static
 #endif
@@ -267,7 +294,8 @@ static inline void m1add(spinor * restrict const tmpr, spinor const * restrict c
 }
 
 static inline void p2add(spinor * restrict const tmpr, spinor const * restrict const s, 
-			 su3 const * restrict const u, const _Complex double phase) {
+			 su3 const * restrict const u, const _Complex double phase,
+			 const scalar * const phi, const scalar * const phip) {
 #ifdef OMP
 #define static
 #endif
@@ -295,7 +323,8 @@ static inline void p2add(spinor * restrict const tmpr, spinor const * restrict c
 }
 
 static inline void m2add(spinor * restrict const tmpr, spinor const * restrict const s, 
-			 su3 const * restrict const u, const _Complex double phase) {
+			 su3 const * restrict const u, const _Complex double phase,
+			 const scalar * const phi, const scalar * const phip) {
 #ifdef OMP
 #define static
 #endif
@@ -322,7 +351,8 @@ static inline void m2add(spinor * restrict const tmpr, spinor const * restrict c
 }
 
 static inline void p3add(spinor * restrict const tmpr, spinor const * restrict const s, 
-			 su3 const * restrict const u, const _Complex double phase) {
+			 su3 const * restrict const u, const _Complex double phase,
+			 const scalar * const phi, const scalar * const phip) {
 #ifdef OMP
 #define static
 #endif
@@ -350,7 +380,8 @@ static inline void p3add(spinor * restrict const tmpr, spinor const * restrict c
 
 static inline void m3addandstore(spinor * restrict const r, spinor const * restrict const s, 
 				 su3 const * restrict const u, const _Complex double phase,
-         spinor const * restrict const tmpr) {
+				 const scalar * const phi, const scalar * const phip,
+				 spinor const * restrict const tmpr) {
 #ifdef OMP
 #define static
 #endif
@@ -399,14 +430,16 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
   {
 #endif
 
-  int ix,iy;                       // x, x+-\hat\mu
-  su3 * restrict up,* restrict um; // U_\mu(x), U_\mu(x-\hat\mu) //TODO check
+  int ix,iy;                       // x, x+-\mu
+  su3 * restrict up,* restrict um; // U_\mu(x), U_\mu(x-\mu)
   bispinor * restrict rr;          // P(x)
   bispinor const * restrict s;     // Q(x)
-  bispinor const * restrict sp;    // Q(x+\hat\mu)
-  bispinor const * restrict sm;    // Q(x-\hat\mu)
-  bispinor tmpr;
-  scalar phi[4];
+  bispinor const * restrict sp;    // Q(x+\mu)
+  bispinor const * restrict sm;    // Q(x-\mu)
+  bispinor tmpr;                   // temp version of P(x), to gather output
+  scalar phi[4];                   // phi_i(x)
+  scalar phip[4][4];               // phi_i(x+mu) = phip[mu][i]
+  scalar phim[4][4];               // phi_i(x-mu) = phim[mu][i]
 
 //  _Complex double rho1, rho2;
 //  rho1 = 1. + g_mu * I;
@@ -423,6 +456,25 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
     rr  = (bispinor *) P + ix;
     s   = (bispinor *) Q + ix;
 
+    // prefatch scalar fields
+    phi[0] = g_scalar_field[0][ix];
+    phi[1] = g_scalar_field[1][ix];
+    phi[2] = g_scalar_field[2][ix];
+    phi[3] = g_scalar_field[3][ix];
+
+    for( int mu=0; mu<4; mu++ )
+    {
+		phip[mu][0] = g_scalar_field[0][g_iup[ix][mu]];
+		phip[mu][1] = g_scalar_field[1][g_iup[ix][mu]];
+		phip[mu][2] = g_scalar_field[2][g_iup[ix][mu]];
+		phip[mu][3] = g_scalar_field[3][g_iup[ix][mu]];
+
+		phim[mu][0] = g_scalar_field[0][g_idn[ix][mu]];
+		phim[mu][1] = g_scalar_field[1][g_idn[ix][mu]];
+		phim[mu][2] = g_scalar_field[2][g_idn[ix][mu]];
+		phim[mu][3] = g_scalar_field[3][g_idn[ix][mu]];
+    }
+
     // the local part (not local in phi)
 
     // tmpr = 0
@@ -437,81 +489,64 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
 
 
     // tmpr += (\eta+2*\rho) * F(x)*\psi(x)
-    phi[0] = g_scalar_field[0][ix];
-    phi[1] = g_scalar_field[1][ix];
-    phi[2] = g_scalar_field[2][ix];
-    phi[3] = g_scalar_field[3][ix];
-
     Fadd(&tmpr, s, phi, eta+2.0*rho);
 
-    // tmpr += \sum_\mu (\rho/4) * F(x+\hat\mu)*\psi
-    // tmpr += \sum_\mu (\rho/4) * F(x-\hat\mu)*\psi
+    // tmpr += \sum_\mu (\rho/4) * F(x+-\mu)*\psi
     for( int mu=0; mu<4; mu++ )
     {
-		phi[0] = g_scalar_field[0][g_iup[ix][mu]];
-		phi[1] = g_scalar_field[1][g_iup[ix][mu]];
-		phi[2] = g_scalar_field[2][g_iup[ix][mu]];
-		phi[3] = g_scalar_field[3][g_iup[ix][mu]];
-
-		Fadd(&tmpr, s, phi, 0.25*rho);
-
-		phi[0] = g_scalar_field[0][g_idn[ix][mu]];
-		phi[1] = g_scalar_field[1][g_idn[ix][mu]];
-		phi[2] = g_scalar_field[2][g_idn[ix][mu]];
-		phi[3] = g_scalar_field[3][g_idn[ix][mu]];
-
-		Fadd(&tmpr, s, phi, 0.25*rho);
+		Fadd(&tmpr, s, phip[mu], 0.25*rho);
+		Fadd(&tmpr, s, phim[mu], 0.25*rho);
 	}
 
 
-    // the hopping part TODO check phase
+    // the hopping part
     /******************************* direction +0 *********************************/
     iy=g_iup[ix][0];
     sp = (bispinor *) Q +iy;
     up=&g_gauge_field[ix][0];
-    p0add(&tmpr, sp, up, 0.5);//phase_0);
+    p0add(&tmpr, sp, up, 0.5*phase_0, phi, phip[0]);
 
     /******************************* direction -0 *********************************/
     iy=g_idn[ix][0];
     sm  = (bispinor *) Q +iy;
     um=&g_gauge_field[iy][0];
-    m0add(&tmpr, sm, um, -0.5);//phase_0);
+    m0add(&tmpr, sm, um, -0.5*phase_0, phi, phim[0]);
 
     /******************************* direction +1 *********************************/
     iy=g_iup[ix][1];
     sp = (bispinor *) Q +iy;
     up=&g_gauge_field[ix][1];
-    p1add(&tmpr, sp, up, 0.5);//phase_1);
+    p1add(&tmpr, sp, up, 0.5*phase_1, phi, phip[1]);
 
     /******************************* direction -1 *********************************/
     iy=g_idn[ix][1];
     sm = (bispinor *) Q +iy;
     um=&g_gauge_field[iy][1];
-    m1add(&tmpr, sm, um, -0.5);//phase_1);
+    m1add(&tmpr, sm, um, -0.5*phase_1, phi, phim[1]);
 
     /******************************* direction +2 *********************************/
     iy=g_iup[ix][2];
     sp = (bispinor *) Q +iy;
     up=&g_gauge_field[ix][2];
-    p2add(&tmpr, sp, up, 0.5);//phase_2);
+    p2add(&tmpr, sp, up, 0.5*phase_2, phi, phip[2]);
 
     /******************************* direction -2 *********************************/
     iy=g_idn[ix][2];
     sm = (bispinor *) Q +iy;
     um=&g_gauge_field[iy][2];
-    m2add(&tmpr, sm, um, -0.5);//phase_2);
+    m2add(&tmpr, sm, um, -0.5*phase_2, phi, phim[2]);
 
     /******************************* direction +3 *********************************/
     iy=g_iup[ix][3];
     sp = (bispinor *) Q +iy;
     up=&g_gauge_field[ix][3];
-    p3add(&tmpr, sp, up, 0.5);//phase_3);
+    p3add(&tmpr, sp, up, 0.5*phase_3, phi, phip[3]);
 
     /******************************* direction -3 *********************************/
     iy=g_idn[ix][3];
     sm = (bispinor *) Q +iy;
     um=&g_gauge_field[iy][3];
-    m3addandstore(rr, sm, um, -0.5/*phase_3*/, &tmpr);
+    m3addandstore(rr, sm, um, -0.5*phase_3, phi, phim[3], &tmpr);
   }
 #ifdef OMP
   } /* OpenMP closing brace */
