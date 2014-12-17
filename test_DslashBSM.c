@@ -72,7 +72,7 @@
 #  define SLICE ((LY*LZ*T/2) + (LX*LZ*T/2) + (LX*LY*T/2))
 #endif
 
-int check_xchange();
+//int check_xchange();
 
 int main(int argc,char *argv[])
 {
@@ -226,24 +226,24 @@ int main(int argc,char *argv[])
   /* define the boundary conditions for the fermion fields */
   boundary(g_kappa);
 
-#ifdef _USE_HALFSPINOR
-  j = init_dirac_halfspinor();
-  if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for halfspinor fields! Aborting...\n");
-    exit(0);
-  }
-  if(g_sloppy_precision_flag == 1) {
-    g_sloppy_precision = 1;
-    j = init_dirac_halfspinor32();
-    if ( j!= 0) {
-      fprintf(stderr, "Not enough memory for 32-Bit halfspinor fields! Aborting...\n");
-      exit(0);
-    }
-  }
-#  if (defined _PERSISTENT)
-  init_xchange_halffield();
-#  endif
-#endif
+//#ifdef _USE_HALFSPINOR
+//  j = init_dirac_halfspinor();
+//  if ( j!= 0) {
+//    fprintf(stderr, "Not enough memory for halfspinor fields! Aborting...\n");
+//    exit(0);
+//  }
+//  if(g_sloppy_precision_flag == 1) {
+//    g_sloppy_precision = 1;
+//    j = init_dirac_halfspinor32();
+//    if ( j!= 0) {
+//      fprintf(stderr, "Not enough memory for 32-Bit halfspinor fields! Aborting...\n");
+//      exit(0);
+//    }
+//  }
+//#  if (defined _PERSISTENT)
+//  init_xchange_halffield();
+//#  endif
+//#endif
 
   status = check_geometry();
   if (status != 0) {
@@ -262,19 +262,16 @@ int main(int argc,char *argv[])
   xchange_gauge(g_gauge_field);
 #endif
 
-	/* the non even/odd case now */
-	/*initialize the pseudo-fermion fields*/
+	/*initialize the bispinor fields*/
 	j_max=1;
 	sdt=0.;
-	for (k=0;k<k_max;k++) { //TODO check which one is source
-	  random_spinor_field_lexic((spinor*) (g_bispinor_field[k]), reproduce_randomnumber_flag, RN_GAUSS);
-	  random_spinor_field_lexic((spinor*) (g_bispinor_field[k]+VOLUME), reproduce_randomnumber_flag, RN_GAUSS);
+	random_spinor_field_lexic( (spinor*)(g_bispinor_field[1]), reproduce_randomnumber_flag, RN_GAUSS);
+	random_spinor_field_lexic( (spinor*)(g_bispinor_field[1])+VOLUME, reproduce_randomnumber_flag, RN_GAUSS);
 #if defined MPI
 //	xchange_lexicfield(&g_bispinor_field[k]->sp_up);
 //	xchange_lexicfield(&g_bispinor_field[k]->sp_dn);
 	  generic_exchange(g_bispinor_field[k], sizeof(bispinor));
 #endif
-	}
 
 
 	// random scalar field
