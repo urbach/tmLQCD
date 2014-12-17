@@ -1,12 +1,7 @@
 /***********************************************************************
  *
- * Copyright (C) 2001 Martin Luescher
- * original code 
- * changed and extended for twisted mass 2002 Andrea Shindler
- *               2007,2008 Carsten Urbach
- *
- * Blue Gene version Copyright (C) 2007 Carsten Urbach 
- * Block Dirac operator Copyright (C) 2008 Carsten Urbach
+ * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach,
+ * 2014 Mario Schroeck
  *
  * This file is part of tmLQCD.
  *
@@ -23,9 +18,11 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Action of a Dirac operator D (BSM toy model) on a given bispinor field
+ *******************************************************************************/
+
+/*******************************************************************************
  *
- * various versions including a block version.
+ * Action of a Dirac operator (Frezzotti-Rossi BSM toy model) on a bispinor field
  *
  *******************************************************************************/
 
