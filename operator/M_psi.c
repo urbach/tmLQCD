@@ -47,7 +47,10 @@
 #include "init/init_scalar_field.h"
 
 
-
+// TODO they should go somewhere else, e.g. input file
+double eta=1.0;
+double rho=1.0;
+double m0=0.0;
 
 void scalarderivatives(_Complex double * drvsc){
 
