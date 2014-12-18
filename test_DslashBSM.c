@@ -252,6 +252,12 @@ int main(int argc,char *argv[])
 //TODO		generic_exchange(g_bispinor_field[1], sizeof(bispinor));
 #endif
 
+	// print L2-norm of source:
+	double squarenorm = square_norm((spinor*)g_bispinor_field[1], 2*VOLUME, 1);
+	if(g_proc_id==0) {
+		printf("\n# ||source||^2 = %e\n", squarenorm);
+		fflush(stdout);
+	}
 
 	// random scalar field
 	for( int s=0; s<numbScalarFields; s++ )
@@ -280,6 +286,13 @@ int main(int argc,char *argv[])
 
 	if(g_proc_id==0) {
 		printf("# Time for Dslash %e sec.\n", sdt);
+		fflush(stdout);
+	}
+
+	// print L2-norm of result:
+	squarenorm = square_norm((spinor*)g_bispinor_field[0], 2*VOLUME, 1);
+	if(g_proc_id==0) {
+		printf("# ||result||^2 = %e\n", squarenorm);
 		printf("\n");
 		fflush(stdout);
 	}
