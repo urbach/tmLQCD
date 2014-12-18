@@ -95,6 +95,8 @@ int main(int argc,char *argv[])
 		printf("# WARNING: even_odd_flag will be ignored (not supported here).\n");
 	}
 	int j,j_max,k,k_max = 1;
+	_Complex double * dscf;
+
 #ifdef HAVE_LIBLEMON
 	paramsXlfInfo *xlfInfo;
 #endif
@@ -197,6 +199,12 @@ int main(int argc,char *argv[])
 		exit(0);
 	}
 
+	j = init_spinor_field(VOLUMEPLUSRAND, 4*k_max);
+	if ( j!= 0) {
+		fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
+		exit(0);
+	}
+
 	int numbScalarFields = 4;
 	j = init_scalar_field(VOLUMEPLUSRAND, numbScalarFields);
 	if ( j!= 0) {
@@ -262,6 +270,9 @@ int main(int argc,char *argv[])
 #endif
 	}
 
+
+	/** one operator: D_psi_BSM **/
+
 #ifdef MPI
 	MPI_Barrier(MPI_COMM_WORLD);
 #endif
@@ -291,6 +302,45 @@ int main(int argc,char *argv[])
 		fflush(stdout);
 	}
 
+
+	/** the other operator: M_psi **/
+	decompact(g_spinor_field[0],g_spinor_field[1],g_bispinor_field[1]);
+
+#ifdef MPI
+	MPI_Barrier(MPI_COMM_WORLD);
+#endif
+	t1 = gettime();
+
+	/* here the actual Dslash */
+	scalarderivatives(dscf);
+	M_psi(g_spinor_field[2], g_spinor_field[3],g_spinor_field[0], g_spinor_field[1],dscf);
+
+	t2 = gettime();
+	dt=t2-t1;
+#ifdef MPI
+	MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+	sdt = dt;
+#endif
+
+	compact(g_bispinor_field[1],g_spinor_field[2],g_spinor_field[3]);
+
+	if(g_proc_id==0) {
+		printf("# Time for Dslash %e sec.\n\n", sdt);
+		fflush(stdout);
+	}
+
+	// print L2-norm of result:
+	squarenorm = square_norm((spinor*)g_bispinor_field[1], 2*VOLUME, 1);
+	if(g_proc_id==0) {
+		printf("# ||result||^2 = %e\n\n", squarenorm);
+		printf("\n");
+		fflush(stdout);
+	}
+
+
+
+	// ---------------
 #ifdef HAVE_LIBLEMON
 	if(g_proc_id==0) {
 		printf("# Performing parallel IO test ...\n");
