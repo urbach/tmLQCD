@@ -59,8 +59,6 @@ void scalarderivatives(_Complex double * drvsc){
   drvsc = malloc(18*VOLUMEPLUSRAND*sizeof(_Complex double));
   /**  drvsc = amalloc(36*VOLUMEPLUSRAND*sizeof(double),3);  **/
 
-  *drvsc = NULL;
-
 #ifdef OMP
 #pragma omp for
 #endif
