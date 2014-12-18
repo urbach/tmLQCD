@@ -134,6 +134,11 @@ int main(int argc,char *argv[])
 		exit(-1);
 	}
 
+	//TODO this should be read from input file
+	eta_BSM = 1.1;
+	rho_BSM = 1.2;
+	m0_BSM  = 1.3;
+
 #ifdef OMP
 	init_openmp();
 #endif

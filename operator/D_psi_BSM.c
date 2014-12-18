@@ -46,11 +46,6 @@
 #include "solver/dirac_operator_eigenvectors.h"
 #include "buffers/utils.h"
 
-// TODO they should go somewhere else, e.g. input file
-double eta=1.0;
-double rho=1.0;
-double m0=0.0;
-
 
 /* operation out(x) += F(y)*in(x)
  * F(y) := [ \phi_0(y) + i \gamma_5 \tau^j \phi_j(y) ] * c

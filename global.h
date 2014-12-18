@@ -63,6 +63,9 @@
 # include "bgl.h"
 #endif
 
+// for Frezzotti-Rossi model Dirac operator
+EXTERN double eta_BSM, rho_BSM, m0_BSM;
+
 EXTERN int DUM_DERI, DUM_SOLVER, DUM_MATRIX;
 EXTERN int NO_OF_SPINORFIELDS;
 
