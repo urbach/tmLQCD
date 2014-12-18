@@ -56,7 +56,7 @@ void scalarderivatives(_Complex double * drvsc){
 
   int ix,iy, iz;
 
-  drvsc = malloc(18*VOLUMEPLUSRAND*sizeof(_Complex double),3);
+  drvsc = malloc(18*VOLUMEPLUSRAND*sizeof(_Complex double));
   /**  drvsc = amalloc(36*VOLUMEPLUSRAND*sizeof(double),3);  **/
 
   *drvsc = NULL;
