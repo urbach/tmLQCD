@@ -296,21 +296,20 @@ int main(int argc,char *argv[])
 #endif
 
 	if(g_proc_id==0) {
-		printf("# Time for Dslash %e sec.\n\n", sdt);
+		printf("# Time for Dslash1: %e sec.\n", sdt);
 		fflush(stdout);
 	}
 
 	// print L2-norm of result:
 	squarenorm = square_norm((spinor*)g_bispinor_field[0], 2*VOLUME, 1);
 	if(g_proc_id==0) {
-		printf("# ||result||^2 = %e\n\n", squarenorm);
-		printf("\n");
+		printf("# ||result1||^2 = %e\n\n", squarenorm);
 		fflush(stdout);
 	}
 
 
 	/** the other operator: M_psi **/
-	decompact(g_spinor_field[0],g_spinor_field[1],g_bispinor_field[1]);
+	decompact(g_spinor_field[0], g_spinor_field[1], g_bispinor_field[1]);
 
 #ifdef MPI
 	MPI_Barrier(MPI_COMM_WORLD);
@@ -319,7 +318,7 @@ int main(int argc,char *argv[])
 
 	/* here the actual Dslash */
 	scalarderivatives(dscf);
-	M_psi(g_spinor_field[2], g_spinor_field[3],g_spinor_field[0], g_spinor_field[1],dscf);
+	M_psi(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1], dscf);
 
 	t2 = gettime();
 	dt=t2-t1;
@@ -329,22 +328,42 @@ int main(int argc,char *argv[])
 	sdt = dt;
 #endif
 
-	compact(g_bispinor_field[1],g_spinor_field[2],g_spinor_field[3]);
+	compact(g_bispinor_field[1], g_spinor_field[2], g_spinor_field[3]);
 
 	if(g_proc_id==0) {
-		printf("# Time for Dslash %e sec.\n\n", sdt);
+		printf("# Time for Dslash2: %e sec.\n", sdt);
 		fflush(stdout);
 	}
 
 	// print L2-norm of result:
 	squarenorm = square_norm((spinor*)g_bispinor_field[1], 2*VOLUME, 1);
 	if(g_proc_id==0) {
-		printf("# ||result||^2 = %e\n\n", squarenorm);
-		printf("\n");
+		printf("# ||result2||^2 = %e\n\n", squarenorm);
 		fflush(stdout);
 	}
 
+	// ---------------
 
+	// subract result1 -= result2
+	for(int ix=0; ix<VOLUME; ix++ )
+	{
+		_vector_sub_assign( g_bispinor_field[0][ix].sp_up.s0, g_bispinor_field[1][ix].sp_up.s0 );
+		_vector_sub_assign( g_bispinor_field[0][ix].sp_up.s1, g_bispinor_field[1][ix].sp_up.s1 );
+		_vector_sub_assign( g_bispinor_field[0][ix].sp_up.s2, g_bispinor_field[1][ix].sp_up.s2 );
+		_vector_sub_assign( g_bispinor_field[0][ix].sp_up.s3, g_bispinor_field[1][ix].sp_up.s3 );
+
+		_vector_sub_assign( g_bispinor_field[0][ix].sp_dn.s0, g_bispinor_field[1][ix].sp_dn.s0 );
+		_vector_sub_assign( g_bispinor_field[0][ix].sp_dn.s1, g_bispinor_field[1][ix].sp_dn.s1 );
+		_vector_sub_assign( g_bispinor_field[0][ix].sp_dn.s2, g_bispinor_field[1][ix].sp_dn.s2 );
+		_vector_sub_assign( g_bispinor_field[0][ix].sp_dn.s3, g_bispinor_field[1][ix].sp_dn.s3 );
+	}
+
+	// print L2-norm of result1 - result2:
+	squarenorm = square_norm((spinor*)g_bispinor_field[0], 2*VOLUME, 1);
+	if(g_proc_id==0) {
+		printf("# ||result1-result2||^2 = %e\n\n", squarenorm);
+		fflush(stdout);
+	}
 
 	// ---------------
 #ifdef HAVE_LIBLEMON
