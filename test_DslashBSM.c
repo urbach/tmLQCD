@@ -277,7 +277,7 @@ int main(int argc,char *argv[])
 	}
 
 
-	/** one operator: D_psi_BSM **/
+	/************************** one operator: D_psi_BSM **************************/
 
 #ifdef MPI
 	MPI_Barrier(MPI_COMM_WORLD);
@@ -308,7 +308,7 @@ int main(int argc,char *argv[])
 	}
 
 
-	/** the other operator: M_psi **/
+	/************************** the other operator: M_psi **************************/
 	decompact(g_spinor_field[0], g_spinor_field[1], g_bispinor_field[1]);
 
 #ifdef MPI
@@ -342,7 +342,7 @@ int main(int argc,char *argv[])
 		fflush(stdout);
 	}
 
-	// ---------------
+	/************************** finished: get difference **************************/
 
 	// subract result1 -= result2
 	for(int ix=0; ix<VOLUME; ix++ )
