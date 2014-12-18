@@ -59,6 +59,7 @@
 #include "init/init_scalar_field.h"
 #include "test/check_geometry.h"
 #include "operator/D_psi_BSM.h"
+#include "operator/M_psi.h"
 #include "mpi_init.h"
 #include "buffers/utils.h"
 #include "linalg/square_norm.h"
