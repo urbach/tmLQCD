@@ -34,9 +34,6 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
-#if (defined BGL && !defined BGP)
-#	include <rts.h>
-#endif
 #ifdef MPI
 # include <mpi.h>
 # ifdef HAVE_LIBLEMON
@@ -56,19 +53,15 @@
 #include "read_input.h"
 #include "start.h"
 #include "boundary.h"
-#include "operator/Hopping_Matrix.h"
-#include "operator/Hopping_Matrix_nocom.h"
-#include "operator/tm_operators.h"
 #include "global.h"
 #include "xchange/xchange.h"
 #include "init/init.h"
 #include "init/init_scalar_field.h"
 #include "test/check_geometry.h"
-#include "operator/D_psi.h"
 #include "operator/D_psi_BSM.h"
-//#include "phmc.h"
 #include "mpi_init.h"
 #include "buffers/utils.h"
+#include "linalg/square_norm.h"
 
 #ifdef PARALLELT
 #	define SLICE (LX*LY*LZ/2)
@@ -255,7 +248,7 @@ int main(int argc,char *argv[])
 	// print L2-norm of source:
 	double squarenorm = square_norm((spinor*)g_bispinor_field[1], 2*VOLUME, 1);
 	if(g_proc_id==0) {
-		printf("\n# ||source||^2 = %e\n", squarenorm);
+		printf("\n# ||source||^2 = %e\n\n", squarenorm);
 		fflush(stdout);
 	}
 
@@ -285,14 +278,14 @@ int main(int argc,char *argv[])
 #endif
 
 	if(g_proc_id==0) {
-		printf("# Time for Dslash %e sec.\n", sdt);
+		printf("# Time for Dslash %e sec.\n\n", sdt);
 		fflush(stdout);
 	}
 
 	// print L2-norm of result:
 	squarenorm = square_norm((spinor*)g_bispinor_field[0], 2*VOLUME, 1);
 	if(g_proc_id==0) {
-		printf("# ||result||^2 = %e\n", squarenorm);
+		printf("# ||result||^2 = %e\n\n", squarenorm);
 		printf("\n");
 		fflush(stdout);
 	}
