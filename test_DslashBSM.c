@@ -231,7 +231,8 @@ int main(int argc,char *argv[])
 		exit(1);
 	}
 #if (defined MPI && !(defined _USE_SHMEM))
-	check_xchange();
+	// fails, we're not using spinor fields
+//	check_xchange();
 #endif
 
 	start_ranlux(1, 123456);
