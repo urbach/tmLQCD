@@ -13,7 +13,7 @@
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
- * GNU General Public License for more details.
+ * GNU General Public License for more deta_BSMils.
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.	If not, see <http://www.gnu.org/licenses/>.
@@ -362,77 +362,77 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
 
 		// the local part (not local in phi)
 
-		// tmpr = m0*Q(x)
-		_vector_mul(rr->sp_up.s0, m0, s->sp_up.s0);
-		_vector_mul(rr->sp_up.s1, m0, s->sp_up.s1);
-		_vector_mul(rr->sp_up.s2, m0, s->sp_up.s2);
-		_vector_mul(rr->sp_up.s3, m0, s->sp_up.s3);
-		_vector_mul(rr->sp_dn.s0, m0, s->sp_up.s0);
-		_vector_mul(rr->sp_dn.s1, m0, s->sp_up.s1);
-		_vector_mul(rr->sp_dn.s2, m0, s->sp_up.s2);
-		_vector_mul(rr->sp_dn.s3, m0, s->sp_up.s3);
+		// tmpr = m0_BSM*Q(x)
+		_vector_mul(rr->sp_up.s0, m0_BSM, s->sp_up.s0);
+		_vector_mul(rr->sp_up.s1, m0_BSM, s->sp_up.s1);
+		_vector_mul(rr->sp_up.s2, m0_BSM, s->sp_up.s2);
+		_vector_mul(rr->sp_up.s3, m0_BSM, s->sp_up.s3);
+		_vector_mul(rr->sp_dn.s0, m0_BSM, s->sp_up.s0);
+		_vector_mul(rr->sp_dn.s1, m0_BSM, s->sp_up.s1);
+		_vector_mul(rr->sp_dn.s2, m0_BSM, s->sp_up.s2);
+		_vector_mul(rr->sp_dn.s3, m0_BSM, s->sp_up.s3);
 
 
-		// tmpr += (\eta+2*\rho) * F(x)*Q(x)
-		Fadd(rr, s, phi, eta+2.0*rho);
+		// tmpr += (\eta_BSM+2*\rho_BSM) * F(x)*Q(x)
+		Fadd(rr, s, phi, eta_BSM+2.0*rho_BSM);
 
-		// tmpr += \sum_\mu (\rho/4) * F(x+-\mu)*Q
+		// tmpr += \sum_\mu (\rho_BSM/4) * F(x+-\mu)*Q
 		for( int mu=0; mu<4; mu++ )
 		{
-			Fadd(rr, s, phip[mu], 0.25*rho);
-			Fadd(rr, s, phim[mu], 0.25*rho);
+			Fadd(rr, s, phip[mu], 0.25*rho_BSM);
+			Fadd(rr, s, phim[mu], 0.25*rho_BSM);
 		}
 
 
 		// the hopping part:
-		// tmpr += +-1/2 \sum_\mu (\gamma_\mu -+ \rho/2*F(x) -+ \rho/2*F(x+-\mu)*U_{+-\mu}(x)*Q(x+-\mu)
+		// tmpr += +-1/2 \sum_\mu (\gamma_\mu -+ \rho_BSM/2*F(x) -+ \rho_BSM/2*F(x+-\mu)*U_{+-\mu}(x)*Q(x+-\mu)
 		/******************************* direction +0 *********************************/
 		iy=g_iup[ix][0];
 		sp = (bispinor *) Q +iy;
 		up=&g_gauge_field[ix][0];
-		p0add(rr, sp, up, 0.5*phase_0, -0.5*rho, phi, phip[0]);
+		p0add(rr, sp, up, 0.5*phase_0, -0.5*rho_BSM, phi, phip[0]);
 
 		/******************************* direction -0 *********************************/
 		iy=g_idn[ix][0];
 		sm	= (bispinor *) Q +iy;
 		um=&g_gauge_field[iy][0];
-		p0add(rr, sm, um, -0.5*phase_0, 0.5*rho, phi, phim[0]);
+		p0add(rr, sm, um, -0.5*phase_0, 0.5*rho_BSM, phi, phim[0]);
 
 		/******************************* direction +1 *********************************/
 		iy=g_iup[ix][1];
 		sp = (bispinor *) Q +iy;
 		up=&g_gauge_field[ix][1];
-		p1add(rr, sp, up, 0.5*phase_1, -0.5*rho, phi, phip[1]);
+		p1add(rr, sp, up, 0.5*phase_1, -0.5*rho_BSM, phi, phip[1]);
 
 		/******************************* direction -1 *********************************/
 		iy=g_idn[ix][1];
 		sm = (bispinor *) Q +iy;
 		um=&g_gauge_field[iy][1];
-		p1add(rr, sm, um, -0.5*phase_1, 0.5*rho, phi, phim[1]);
+		p1add(rr, sm, um, -0.5*phase_1, 0.5*rho_BSM, phi, phim[1]);
 
 		/******************************* direction +2 *********************************/
 		iy=g_iup[ix][2];
 		sp = (bispinor *) Q +iy;
 		up=&g_gauge_field[ix][2];
-		p2add(rr, sp, up, 0.5*phase_2, -0.5*rho, phi, phip[2]);
+		p2add(rr, sp, up, 0.5*phase_2, -0.5*rho_BSM, phi, phip[2]);
 
 		/******************************* direction -2 *********************************/
 		iy=g_idn[ix][2];
 		sm = (bispinor *) Q +iy;
 		um=&g_gauge_field[iy][2];
-		p2add(rr, sm, um, -0.5*phase_2, 0.5*rho, phi, phim[2]);
+		p2add(rr, sm, um, -0.5*phase_2, 0.5*rho_BSM, phi, phim[2]);
 
 		/******************************* direction +3 *********************************/
 		iy=g_iup[ix][3];
 		sp = (bispinor *) Q +iy;
 		up=&g_gauge_field[ix][3];
-		p3add(rr, sp, up, 0.5*phase_3, -0.5*rho, phi, phip[3]);
+		p3add(rr, sp, up, 0.5*phase_3, -0.5*rho_BSM, phi, phip[3]);
 
 		/******************************* direction -3 *********************************/
 		iy=g_idn[ix][3];
 		sm = (bispinor *) Q +iy;
 		um=&g_gauge_field[iy][3];
-		p3add(rr, sm, um, -0.5*phase_3, 0.5*rho, phi, phim[3]);
+		p3add(rr, sm, um, -0.5*phase_3, 0.5*rho_BSM, phi, phim[3]);
 	}
 #ifdef OMP
 	} /* OpenMP closing brace */

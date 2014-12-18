@@ -153,11 +153,11 @@ static inline void nohopp(spinor * restrict const tmpr, spinor const * restrict 
       fact2 = 2.0*m0+2.0*(eta+4.0*rho)*nodern+0.5*rho*
               (p0dern-m0dern+p1dern-m1dern+p2dern-m2dern+p3dern-m3dern); **/
 
-  fact1 = 2.0*m0+2.0*(eta+4.0*rho)*(*xs)+0.5*rho*                  \
+  fact1 = 2.0*m0_BSM+2.0*(eta_BSM+4.0*rho_BSM)*(*xs)+0.5*rho_BSM*                  \
              (   *(xs+2)   -(*(xs+4))  +(*(xs+6))  -(*(xs+8))      \
 	       +(*(xs+10)) -(*(xs+12)) +(*(xs+14)) -(*(xs+16)) );               
 
-  fact2 = 2.0*m0+2.0*(eta+4.0*rho)*(*(xs+1))+0.5*rho*              \
+  fact2 = 2.0*m0_BSM+2.0*(eta_BSM+4.0*rho_BSM)*(*(xs+1))+0.5*rho_BSM*              \
              (   *(xs+3)   -(*(xs+5))  +(*(xs+7))  -(*(xs+9))      \
 	       +(*(xs+11)) -(*(xs+13)) +(*(xs+15)) -(*(xs+17)) );
 
@@ -216,8 +216,8 @@ static inline void pp0add(spinor * restrict const tmpr , spinor const * restrict
   /**  fact1 = -rho*(2.0*noderd+rho*p0derd);
        fact2 = -rho*(2.0*nodern+rho*p0dern); **/
 
-  fact1 = -rho*(2.0*(*xs)    +rho*(*(xs+2)));
-  fact2 = -rho*(2.0*(*(xs+1))+rho*(*(xs+3)));
+  fact1 = -rho_BSM*(2.0*(*xs)    +rho_BSM*(*(xs+2)));
+  fact2 = -rho_BSM*(2.0*(*(xs+1))+rho_BSM*(*(xs+3)));
 
   if(row==2) {
     fact1 = conj(fact1);
@@ -275,8 +275,8 @@ static inline void mm0add(spinor * restrict const tmpr, spinor const * restrict 
   /** fact1 = -rho*(2.0*noderd-rho*m0derd);
       fact2 = -rho*(2.0*nodern-rho*m0dern); **/
 
-  fact1 = -rho*(2.0*(*xs)    -rho*(*(xs+4)));
-  fact2 = -rho*(2.0*(*(xs+1))-rho*(*(xs+5)));
+  fact1 = -rho_BSM*(2.0*(*xs)    -rho_BSM*(*(xs+4)));
+  fact2 = -rho_BSM*(2.0*(*(xs+1))-rho_BSM*(*(xs+5)));
 
   if(row==2) {
     fact1 = conj(fact1);
@@ -334,8 +334,8 @@ static inline void pp1add(spinor * restrict const tmpr, spinor const * restrict 
   /** fact1 = -rho*(2.0*noderd+rho*p1derd);
       fact2 = -rho*(2.0*nodern+rho*p1dern); **/
 
-  fact1 = -rho*(2.0*(*xs)    +rho*(*(xs+6)));
-  fact2 = -rho*(2.0*(*(xs+1))+rho*(*(xs+7)));
+  fact1 = -rho_BSM*(2.0*(*xs)    +rho_BSM*(*(xs+6)));
+  fact2 = -rho_BSM*(2.0*(*(xs+1))+rho_BSM*(*(xs+7)));
 
   if(row==2) {
     fact1 = conj(fact1);
@@ -393,8 +393,8 @@ static inline void mm1add(spinor * restrict const tmpr, spinor const * restrict 
   /** fact1 = -rho*(2.0*noderd-rho*m1derd);
       fact2 = -rho*(2.0*nodern-rho*m1dern); **/
 
-  fact1 = -rho*(2.0*(*xs)    -rho*(*(xs+8)));
-  fact2 = -rho*(2.0*(*(xs+1))-rho*(*(xs+9)));
+  fact1 = -rho_BSM*(2.0*(*xs)    -rho_BSM*(*(xs+8)));
+  fact2 = -rho_BSM*(2.0*(*(xs+1))-rho_BSM*(*(xs+9)));
 
   if(row==2) {
     fact1 = conj(fact1);
@@ -452,8 +452,8 @@ static inline void pp2add(spinor * restrict const tmpr, spinor const * restrict 
   /** fact1 = -rho*(2.0*noderd+rho*p2derd);
       fact2 = -rho*(2.0*nodern+rho*p2dern); **/
 
-  fact1 = -rho*(2.0*(*xs)    +rho*(*(xs+10)));
-  fact2 = -rho*(2.0*(*(xs+1))+rho*(*(xs+11)));
+  fact1 = -rho_BSM*(2.0*(*xs)    +rho_BSM*(*(xs+10)));
+  fact2 = -rho_BSM*(2.0*(*(xs+1))+rho_BSM*(*(xs+11)));
 
   if(row==2) {
     fact1 = conj(fact1);
@@ -511,8 +511,8 @@ static inline void mm2add(spinor * restrict const tmpr, spinor const * restrict 
   /** fact1 = -rho*(2.0*noderd-rho*m2derd);
       fact2 = -rho*(2.0*nodern-rho*m2dern); **/
 
-  fact1 = -rho*(2.0*(*xs)    -rho*(*(xs+12)));
-  fact2 = -rho*(2.0*(*(xs+1))-rho*(*(xs+13)));
+  fact1 = -rho_BSM*(2.0*(*xs)    -rho_BSM*(*(xs+12)));
+  fact2 = -rho_BSM*(2.0*(*(xs+1))-rho_BSM*(*(xs+13)));
 
   if(row==2) {
     fact1 = conj(fact1);
@@ -570,8 +570,8 @@ static inline void pp3add(spinor * restrict const tmpr, spinor const * restrict 
   /** fact1 = -rho*(2.0*noderd+rho*p3derd);
       fact2 = -rho*(2.0*nodern+rho*p3dern); **/
 
-  fact1 = -rho*(2.0*(*xs)    +rho*(*(xs+14)));
-  fact2 = -rho*(2.0*(*(xs+1))+rho*(*(xs+15)));
+  fact1 = -rho_BSM*(2.0*(*xs)    +rho_BSM*(*(xs+14)));
+  fact2 = -rho_BSM*(2.0*(*(xs+1))+rho_BSM*(*(xs+15)));
 
   if(row==2) {
     fact1 = conj(fact1);
@@ -629,8 +629,8 @@ static inline void mm3addandstore(spinor * restrict const r, spinor const * rest
   /** fact1 = -rho*(2.0*noderd-rho*m3derd);
       fact2 = -rho*(2.0*nodern-rho*m3dern); **/
 
-  fact1 = -rho*(2.0*(*xs)    -rho*(*(xs+16)));
-  fact2 = -rho*(2.0*(*(xs+1))-rho*(*(xs+17)));
+  fact1 = -rho_BSM*(2.0*(*xs)    -rho_BSM*(*(xs+16)));
+  fact2 = -rho_BSM*(2.0*(*(xs+1))-rho_BSM*(*(xs+17)));
 
   if(row==2) {
     fact1 = conj(fact1);
