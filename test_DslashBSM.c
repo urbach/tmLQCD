@@ -63,6 +63,7 @@
 #include "mpi_init.h"
 #include "buffers/utils.h"
 #include "linalg/square_norm.h"
+#include "linalg/comp_decomp.h"
 
 #ifdef PARALLELT
 #	define SLICE (LX*LY*LZ/2)
