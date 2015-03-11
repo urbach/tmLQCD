@@ -23,8 +23,12 @@
 /*******************************************************************************
 *
 * test program for Frezzotti-Rossi BSM toy model Dslash (D_psi_BSM)
+* set variable TEST_INVERSION to 1 for testing the inversion,
+* otherwise a simple application of Dslash on a spinor will be tested.
 *
 *******************************************************************************/
+#define TEST_INVERSION 1
+
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
@@ -284,8 +288,12 @@ int main(int argc,char *argv[])
 #endif
 	t1 = gettime();
 
-	/* here the actual Dslash */
+	/* here the actual Dslash application */
+#if TEST_INVERSION
+
+#else
 	D_psi_BSM(g_bispinor_field[0], g_bispinor_field[1]);
+#endif
 
 	t2 = gettime();
 	dt=t2-t1;
@@ -316,9 +324,13 @@ int main(int argc,char *argv[])
 #endif
 	t1 = gettime();
 
-	/* here the actual Dslash */
+	/* here the actual Dslash application */
+#if TEST_INVERSION
+
+#else
 	scalarderivatives(dscf);
 	M_psi(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1], dscf);
+#endif
 
 	t2 = gettime();
 	dt=t2-t1;
