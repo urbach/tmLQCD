@@ -60,7 +60,7 @@ void compact(bispinor * const R, spinor * const S, spinor * const P)
 #ifdef OMP
 #pragma omp for
 #endif
-  for (int ix = 0; ix < VOLUME/2; ix++){
+  for (int ix = 0; ix < VOLUME; ix++){
     r=(spinor *) &R[ix].sp_up;
     s=(spinor *) S + ix;
     
@@ -143,7 +143,7 @@ void decompact(spinor * const S, spinor * const P, bispinor * const R){
 #ifdef OMP
 #pragma omp for
 #endif
-  for (int ix = 0; ix < VOLUME/2; ix++)
+  for (int ix = 0; ix < VOLUME; ix++)
   {
     s=(spinor *) &R[ix].sp_up;
     r=(spinor *) S + ix;

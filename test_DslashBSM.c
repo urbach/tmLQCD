@@ -27,7 +27,7 @@
 * otherwise a simple application of Dslash on a spinor will be tested.
 *
 *******************************************************************************/
-#define TEST_INVERSION 1
+#define TEST_INVERSION 0
 
 
 #ifdef HAVE_CONFIG_H
