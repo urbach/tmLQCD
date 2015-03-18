@@ -254,7 +254,10 @@ static inline void p1add(bispinor * restrict const tmpr, bispinor const * restri
 #endif
 
 	// us = phase*u*s
-	bispinor_times_phase_times_u(&us, phase, u, s);
+	if( inv )
+		bispinor_times_phase_times_inverse_u(&us, phase, u, s);
+	else
+		bispinor_times_phase_times_u(&us, phase, u, s);
 
 	// tmpr += \gamma_0*us
 	_vector_i_add_assign(tmpr->sp_up.s0, us.sp_up.s3);
@@ -286,7 +289,10 @@ static inline void p2add(bispinor * restrict const tmpr, bispinor const * restri
 #endif
 
 	// us = phase*u*s
-	bispinor_times_phase_times_u(&us, phase, u, s);
+	if( inv )
+		bispinor_times_phase_times_inverse_u(&us, phase, u, s);
+	else
+		bispinor_times_phase_times_u(&us, phase, u, s);
 
 	// tmpr += \gamma_0*us
 	_vector_add_assign(tmpr->sp_up.s0, us.sp_up.s3);
@@ -318,7 +324,10 @@ static inline void p3add(bispinor * restrict const tmpr, bispinor const * restri
 #endif
 
 	// us = phase*u*s
-	bispinor_times_phase_times_u(&us, phase, u, s);
+	if( inv )
+		bispinor_times_phase_times_inverse_u(&us, phase, u, s);
+	else
+		bispinor_times_phase_times_u(&us, phase, u, s);
 
 	// tmpr += \gamma_0*us
 	_vector_i_add_assign(tmpr->sp_up.s0, us.sp_up.s2);
