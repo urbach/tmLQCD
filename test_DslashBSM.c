@@ -65,7 +65,7 @@
 #include "operator/D_psi_BSM.h"
 #include "operator/M_psi.h"
 #include "mpi_init.h"
-#include "buffers/utils.h"
+//#include "buffers/utils.h"
 #include "linalg/square_norm.h"
 #include "linalg/comp_decomp.h"
 
@@ -100,7 +100,7 @@ int main(int argc,char *argv[])
 		printf("# WARNING: even_odd_flag will be ignored (not supported here).\n");
 	}
 	int j,j_max,k,k_max = 1;
-	_Complex double * dscf;
+	_Complex double * drvsc;
 
 #ifdef HAVE_LIBLEMON
 	paramsXlfInfo *xlfInfo;
@@ -222,6 +222,8 @@ int main(int argc,char *argv[])
 		exit(0);
 	}
 
+	drvsc = malloc(18*VOLUMEPLUSRAND*sizeof(_Complex double));
+
 	if(g_proc_id == 0) {
 		fprintf(stdout,"# The number of processes is %d \n",g_nproc);
 		printf("# The lattice size is %d x %d x %d x %d\n",
@@ -328,8 +330,8 @@ int main(int argc,char *argv[])
 #if TEST_INVERSION
 
 #else
-	scalarderivatives(dscf);
-	M_psi(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1], dscf);
+	scalarderivatives(drvsc);
+	M_psi(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1], drvsc);
 #endif
 
 	t2 = gettime();
