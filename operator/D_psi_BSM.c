@@ -180,28 +180,28 @@ static inline void bispinor_times_phase_times_inverse_u(bispinor * restrict cons
 #endif
 
 	_su3_inverse_multiply(chi, (*u), s->sp_up.s0);
-	_complex_times_vector(us->sp_up.s0, phase, chi);
+	_complexcjg_times_vector(us->sp_up.s0, phase, chi);
 
 	_su3_inverse_multiply(chi, (*u), s->sp_up.s1);
-	_complex_times_vector(us->sp_up.s1, phase, chi);
+	_complexcjg_times_vector(us->sp_up.s1, phase, chi);
 
 	_su3_inverse_multiply(chi, (*u), s->sp_up.s2);
-	_complex_times_vector(us->sp_up.s2, phase, chi);
+	_complexcjg_times_vector(us->sp_up.s2, phase, chi);
 
 	_su3_inverse_multiply(chi, (*u), s->sp_up.s3);
-	_complex_times_vector(us->sp_up.s3, phase, chi);
+	_complexcjg_times_vector(us->sp_up.s3, phase, chi);
 
 	_su3_inverse_multiply(chi, (*u), s->sp_dn.s0);
-	_complex_times_vector(us->sp_dn.s0, phase, chi);
+	_complexcjg_times_vector(us->sp_dn.s0, phase, chi);
 
 	_su3_inverse_multiply(chi, (*u), s->sp_dn.s1);
-	_complex_times_vector(us->sp_dn.s1, phase, chi);
+	_complexcjg_times_vector(us->sp_dn.s1, phase, chi);
 
 	_su3_inverse_multiply(chi, (*u), s->sp_dn.s2);
-	_complex_times_vector(us->sp_dn.s2, phase, chi);
+	_complexcjg_times_vector(us->sp_dn.s2, phase, chi);
 
 	_su3_inverse_multiply(chi, (*u), s->sp_dn.s3);
-	_complex_times_vector(us->sp_dn.s3, phase, chi);
+	_complexcjg_times_vector(us->sp_dn.s3, phase, chi);
 
 	return;
 }
