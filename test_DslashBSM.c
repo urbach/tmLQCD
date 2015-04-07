@@ -356,6 +356,36 @@ int main(int argc,char *argv[])
 		fflush(stdout);
 	}
 
+	/************************** timing D_psi **************************/
+
+#if 0
+#ifdef MPI
+	MPI_Barrier(MPI_COMM_WORLD);
+#endif
+	t1 = gettime();
+
+	/* here the actual Dslash application */
+#if TEST_INVERSION
+
+#else
+	D_psi(g_spinor_field[2], g_spinor_field[3]);
+#endif
+
+	t2 = gettime();
+	dt=t2-t1;
+#ifdef MPI
+	MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+	sdt = dt;
+#endif
+
+
+	if(g_proc_id==0) {
+		printf("# Time for D_psi: %e sec.\n", sdt);
+		fflush(stdout);
+	}
+#endif
+
 	/************************** finished: get difference **************************/
 
 	// subract result1 -= result2
