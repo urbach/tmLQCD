@@ -355,6 +355,7 @@ eigenvalues.c           compute the nr_of_eigenvalues lowest eigenvalues
 fgmres.c:               FGMRES (flexible GMRES) solver
 gcr.c:                  GCR solver
 gcr4complex.c:          GCR solver for complex fields
+fgmres4complex.c:       FGMRES solver for complex fields
 generate_dfl_subspace.c: experimental
 gmres.c:                GMRES solver
 gmres_dr.c:             GMRES-DR solver

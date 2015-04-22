@@ -550,6 +550,11 @@ inline void rmQuotes(char *str){
     little_solver = 2;
     if(myverbose) printf("Littlesolver set to mr line %d monomial %d\n", line_of_file, current_monomial);
   }
+  
+  {SPC}*LittleSolver{EQL}fgmres {
+    little_solver = 3;
+    if(myverbose) printf("Littlesolver set to fgmres line %d monomial %d\n", line_of_file, current_monomial);
+  }
 
   {SPC}*UsePL{EQL}yes {
     usePL = 1;

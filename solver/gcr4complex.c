@@ -173,6 +173,12 @@ void ldiff(_Complex double * const Q, _Complex double * const R, _Complex double
   return;
 }
 
+void lassign(_Complex double * const R, _Complex double * const S, const int N)
+{
+  memcpy(R, S, N*sizeof(_Complex double));
+  return;
+}
+
 void ldiff_assign(_Complex double * const Q, _Complex double * const S, const int N) 
 {
   for(int i = 0; i < N; ++i)

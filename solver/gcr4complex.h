@@ -34,6 +34,7 @@ void lassign_diff_mul(_Complex double * const R, _Complex double * const S, cons
 void lassign_add_mul(_Complex double * const R, _Complex double * const S, const _Complex double c, const int N);
 void lassign_add_mul_r(_Complex double * const R, _Complex double * const S, const double c, const int N);
 void lassign_mul_add_r(_Complex double * const R, const double c, _Complex double * const S, const int N);
+void lassign(_Complex double * const R, _Complex double * const S, const int N);
 void ldiff_assign(_Complex double * const Q, _Complex double * const S, 
 		  const int N);
 void ladd_assign(_Complex double * const Q, _Complex double * const S, 
