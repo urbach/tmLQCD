@@ -75,6 +75,9 @@
 #define _default_X1 0.
 #define _default_X2 0.
 #define _default_X3 0.
+#define _default_rho_BSM 1.0
+#define _default_eta_BSM 1.0
+#define _default_m0_BSM  0.0
 #define _default_max_solver_iterations 5000
 #define _default_solver_precision 1.e-15
 #define _default_g_rgi_C1 0.

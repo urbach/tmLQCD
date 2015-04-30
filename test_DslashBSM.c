@@ -65,7 +65,7 @@
 #include "operator/D_psi_BSM.h"
 #include "operator/M_psi.h"
 #include "mpi_init.h"
-//#include "buffers/utils.h"
+#include "buffers/utils.h"
 #include "linalg/square_norm.h"
 #include "linalg/comp_decomp.h"
 
@@ -138,10 +138,11 @@ int main(int argc,char *argv[])
 		exit(-1);
 	}
 
-	//TODO this should be read from input file
-	eta_BSM = 1.1;
-	rho_BSM = 1.2;
-	m0_BSM  = 1.3;
+	if(g_proc_id==0) {
+		printf("parameter rho_BSM set to %f\n", rho_BSM);
+		printf("parameter eta_BSM set to %f\n", eta_BSM);
+		printf("parameter  m0_BSM set to %f\n",  m0_BSM);
+	}
 
 #ifdef OMP
 	init_openmp();
@@ -263,7 +264,7 @@ int main(int argc,char *argv[])
 	random_spinor_field_lexic( (spinor*)(g_bispinor_field[1]), reproduce_randomnumber_flag, RN_GAUSS);
 	random_spinor_field_lexic( (spinor*)(g_bispinor_field[1])+VOLUME, reproduce_randomnumber_flag, RN_GAUSS);
 #if defined MPI
-//TODO		generic_exchange(g_bispinor_field[1], sizeof(bispinor));
+	generic_exchange(g_bispinor_field[1], sizeof(bispinor));
 #endif
 
 	// print L2-norm of source:
@@ -278,7 +279,7 @@ int main(int argc,char *argv[])
 	{
 		ranlxd(g_scalar_field[s], VOLUME);
 #ifdef MPI
-//TODO		generic_exchange(g_scalar_field[s], sizeof(scalar));
+		generic_exchange(g_scalar_field[s], sizeof(scalar));
 #endif
 	}
 

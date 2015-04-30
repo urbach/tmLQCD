@@ -217,6 +217,9 @@ inline void rmQuotes(char *str){
 %x BOUNDX
 %x BOUNDY
 %x BOUNDZ
+%x RHOBSM
+%x ETABSM
+%x M0BSM
 %X READSOURCE
 %x SOURCEFORMAT
 %x SOURCEFILE
@@ -386,6 +389,9 @@ inline void rmQuotes(char *str){
 ^NoSamples{EQL}                    BEGIN(NOSAMPLES);
 ^SplittedPropagator{EQL}           BEGIN(PROPSPLIT);
 ^UsePreconditioning{EQL}           BEGIN(PRECONDITIONING);
+^ParamEtaBSM{EQL}                  BEGIN(ETABSM);
+^ParamRhoBSM{EQL}                  BEGIN(RHOBSM);
+^ParamMassBSM{EQL}                 BEGIN(M0BSM);
 
 ^BeginMeasurement{SPC}+            BEGIN(INITMEASUREMENT);
 ^ComputeModeNumber{EQL}            BEGIN(COMPUTEMN);
@@ -1785,6 +1791,18 @@ inline void rmQuotes(char *str){
   X3 = atof(yytext);
   if(myverbose != 0) printf("X3 for boundary cond. in z-direction set to %e times pi\n", X3);
 }
+<RHOBSM>{FLT} {
+  rho_BSM = atof(yytext);
+  if(myverbose != 0) printf("parameter rho_BSM set to %f\n", rho_BSM);
+}
+<ETABSM>{FLT} {
+  eta_BSM = atof(yytext);
+  if(myverbose != 0) printf("parameter eta_BSM set to %f\n", eta_BSM);
+}
+<M0BSM>{FLT} {
+  m0_BSM = atof(yytext);
+  if(myverbose != 0) printf("parameter m0_BSM set to %f\n", m0_BSM);
+}
 <READSOURCE>yes     {
   read_source_flag=1;
   if(myverbose!=0) printf("Read inversion source from file\n");
@@ -2130,6 +2148,9 @@ int read_input(char * conf_file){
   X1 = _default_X1;
   X2 = _default_X2;
   X3 = _default_X3;
+  rho_BSM = _default_rho_BSM;
+  eta_BSM = _default_eta_BSM;
+  m0_BSM  = _default_m0_BSM;
   g_rgi_C1 = _default_g_rgi_C1;
   read_source_flag= _default_read_source_flag;
   if(SourceInfo.basename == NULL) SourceInfo.basename = (char*)malloc(100*sizeof(char));

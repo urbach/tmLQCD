@@ -44,7 +44,7 @@
 #include "block.h"
 #include "operator/D_psi.h"
 #include "solver/dirac_operator_eigenvectors.h"
-//#include "buffers/utils.h"
+#include "buffers/utils.h"
 
 
 /* operation out(x) += F(y)*in(x)
@@ -362,7 +362,7 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
 	}
 #endif
 #ifdef MPI
-//TODO	generic_exchange(Q, sizeof(bispinor));
+	generic_exchange(Q, sizeof(bispinor));
 #endif
 
 #ifdef OMP
