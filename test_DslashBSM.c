@@ -27,7 +27,7 @@
 * otherwise a simple application of Dslash on a spinor will be tested.
 *
 *******************************************************************************/
-#define TEST_INVERSION 0
+#define TEST_INVERSION 1
 
 
 #ifdef HAVE_CONFIG_H
@@ -68,6 +68,8 @@
 #include "buffers/utils.h"
 #include "linalg/square_norm.h"
 #include "linalg/comp_decomp.h"
+#include "linalg/assign_diff_mul.h"
+#include "solver/fgmres4bispinors.h"
 
 #ifdef PARALLELT
 #	define SLICE (LX*LY*LZ/2)
@@ -99,7 +101,7 @@ int main(int argc,char *argv[])
 		even_odd_flag=0;
 		printf("# WARNING: even_odd_flag will be ignored (not supported here).\n");
 	}
-	int j,j_max,k,k_max = 1;
+	int j,j_max,k,k_max = 2;
 	_Complex double * drvsc;
 
 #ifdef HAVE_LIBLEMON
@@ -293,7 +295,9 @@ int main(int argc,char *argv[])
 
 	/* here the actual Dslash application */
 #if TEST_INVERSION
-
+	fgmres4bispinors(g_bispinor_field[0], g_bispinor_field[1],
+	   16, 100, 1.0e-8, 1.0e-8,
+	   VOLUME, 0, &D_psi_BSM);
 #else
 	D_psi_BSM(g_bispinor_field[0], g_bispinor_field[1]);
 #endif
@@ -307,17 +311,27 @@ int main(int argc,char *argv[])
 #endif
 
 	if(g_proc_id==0) {
-		printf("# Time for Dslash1: %e sec.\n", sdt);
+		printf("\n# Time for Dslash1: %e sec.\n", sdt);
 		fflush(stdout);
 	}
 
+#if TEST_INVERSION
+	// check result
+	D_psi_BSM(g_bispinor_field[2], g_bispinor_field[0]);
+	assign_diff_mul((spinor*)g_bispinor_field[2], (spinor*)g_bispinor_field[1], 1.0, 2*VOLUME);
+	squarenorm = square_norm((spinor*)g_bispinor_field[2], 2*VOLUME, 1);
+	if(g_proc_id==0) {
+		printf("# ||A*result1-b||^2 = %e\n\n", squarenorm);
+		fflush(stdout);
+	}
+#else
 	// print L2-norm of result:
 	squarenorm = square_norm((spinor*)g_bispinor_field[0], 2*VOLUME, 1);
 	if(g_proc_id==0) {
 		printf("# ||result1||^2 = %e\n\n", squarenorm);
 		fflush(stdout);
 	}
-
+#endif
 
 	/************************** the other operator: M_psi **************************/
 	decompact(g_spinor_field[0], g_spinor_field[1], g_bispinor_field[1]);
