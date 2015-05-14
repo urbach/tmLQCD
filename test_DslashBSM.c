@@ -58,6 +58,8 @@
 #include "start.h"
 #include "boundary.h"
 #include "global.h"
+#include "git_hash.h"
+#include "getopt.h"
 #include "xchange/xchange.h"
 #include "init/init.h"
 #include "init/init_scalar_field.h"
@@ -89,8 +91,20 @@
 
 //int check_xchange();
 
+static void usage();
+static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
+static void set_default_filenames(char ** input_filename, char ** filename);
+
 int main(int argc,char *argv[])
 {
+  FILE *parameterfile = NULL;
+  char datafilename[206];
+  char parameterfilename[206];
+  char conf_filename[50];
+  char * input_filename = NULL;
+  char * filename = NULL;
+  double plaquette_energy;
+
 #ifdef _USE_HALFSPINOR
 	#undef _USE_HALFSPINOR
 	printf("# WARNING: USE_HALFSPINOR will be ignored (not supported here).\n");
@@ -134,11 +148,14 @@ int main(int argc,char *argv[])
 
 	g_rgi_C1 = 1.;
 
-	/* Read the input file */
-	if((status = read_input("test_Dslash.input")) != 0) {
-		fprintf(stderr, "Could not find input file: test_Dslash.input\nAborting...\n");
-		exit(-1);
-	}
+  process_args(argc,argv,&input_filename,&filename);
+  set_default_filenames(&input_filename, &filename);
+
+  /* Read the input file */
+  if( (j = read_input(input_filename)) != 0) {
+    fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
+    exit(-1);
+  }
 
 	if(g_proc_id==0) {
 		printf("parameter rho_BSM set to %f\n", rho_BSM);
@@ -450,5 +467,64 @@ int main(int argc,char *argv[])
 	MPI_Finalize();
 #endif
 	return(0);
+}
+
+
+static void usage()
+{
+  fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
+  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
+  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+  fprintf(stdout, "Usage:   invert [options]\n");
+  fprintf(stdout, "Options: [-f input-filename]\n");
+  fprintf(stdout, "         [-o output-filename]\n");
+  fprintf(stdout, "         [-v] more verbosity\n");
+  fprintf(stdout, "         [-h|-? this help]\n");
+  fprintf(stdout, "         [-V] print version information and exit\n");
+  exit(0);
+}
+
+static void process_args(int argc, char *argv[], char ** input_filename, char ** filename) {
+  int c;
+  while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {
+    switch (c) {
+      case 'f':
+        *input_filename = calloc(200, sizeof(char));
+        strncpy(*input_filename, optarg, 200);
+        break;
+      case 'o':
+        *filename = calloc(200, sizeof(char));
+        strncpy(*filename, optarg, 200);
+        break;
+      case 'v':
+        verbose = 1;
+        break;
+      case 'V':
+        if(g_proc_id == 0) {
+          fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
+        }
+        exit(0);
+        break;
+      case 'h':
+      case '?':
+      default:
+        if( g_proc_id == 0 ) {
+          usage();
+        }
+        break;
+    }
+  }
+}
+
+static void set_default_filenames(char ** input_filename, char ** filename) {
+  if( *input_filename == NULL ) {
+    *input_filename = calloc(13, sizeof(char));
+    strcpy(*input_filename,"invert.input");
+  }
+
+  if( *filename == NULL ) {
+    *filename = calloc(7, sizeof(char));
+    strcpy(*filename,"output");
+  }
 }
 
