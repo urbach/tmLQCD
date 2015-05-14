@@ -57,6 +57,7 @@
 #include "read_input.h"
 #include "start.h"
 #include "boundary.h"
+#include "io/gauge.h"
 #include "global.h"
 #include "git_hash.h"
 #include "getopt.h"
@@ -67,6 +68,7 @@
 #include "operator/D_psi_BSM.h"
 #include "operator/M_psi.h"
 #include "mpi_init.h"
+#include "measure_gauge_action.h"
 #include "buffers/utils.h"
 #include "linalg/square_norm.h"
 #include "linalg/comp_decomp.h"
@@ -270,7 +272,43 @@ int main(int argc,char *argv[])
 #endif
 
 	start_ranlux(1, 123456);
-	random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
+
+	if( strcmp(gauge_input_filename, "create_random_gaugefield") == 0 ) {
+		random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
+	}
+	else {
+		sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nstore);
+		if (g_cart_id == 0) {
+		  printf("#\n# Trying to read gauge field from file %s in %s precision.\n",
+				conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
+		  fflush(stdout);
+		}
+
+		int i;
+		if( (i = read_gauge_field(conf_filename,g_gauge_field)) !=0) {
+		  fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i, conf_filename);
+		  exit(-2);
+		}
+
+		if (g_cart_id == 0) {
+			printf("# Finished reading gauge field.\n");
+			fflush(stdout);
+		}
+	}
+
+
+
+#ifdef MPI
+    xchange_gauge(g_gauge_field);
+#endif
+
+    /*compute the energy of the gauge field*/
+    plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
+
+    if (g_cart_id == 0) {
+      printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
+      fflush(stdout);
+    }
 
 #ifdef MPI
 	/*For parallelization: exchange the gaugefield */
@@ -473,8 +511,8 @@ int main(int argc,char *argv[])
 static void usage()
 {
   fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
-  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+//  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
+//  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   invert [options]\n");
   fprintf(stdout, "Options: [-f input-filename]\n");
   fprintf(stdout, "         [-o output-filename]\n");
@@ -501,7 +539,7 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
         break;
       case 'V':
         if(g_proc_id == 0) {
-          fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
+//          fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
         }
         exit(0);
         break;
