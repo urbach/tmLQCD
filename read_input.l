@@ -125,6 +125,8 @@ inline void rmQuotes(char *str){
   int return_check_flag, return_check_interval;
   int gauge_precision_read_flag;
   int gauge_precision_write_flag;
+  int scalar_precision_read_flag;
+  int scalar_precision_write_flag;
   int g_disable_IO_checks;
   int gmres_m_parameter, gmresdr_nr_ev;
   int reproduce_randomnumber_flag;
@@ -1908,6 +1910,22 @@ inline void rmQuotes(char *str){
   gauge_precision_write_flag = 64;
   if(myverbose!=0) printf("Save gauges in 64 Bit precision!\n");
 }
+<SCALARRPREC>32 {
+  scalar_precision_read_flag = 32;
+  if(myverbose!=0) printf("Read scalars in 32 Bit precision!\n");
+}
+<SCALARRPREC>64 {
+  scalar_precision_read_flag = 64;
+  if(myverbose!=0) printf("Read scalars in 64 Bit precision!\n");
+}
+<SCALARWPREC>32 {
+  scalar_precision_write_flag = 32;
+  if(myverbose!=0) printf("Save scalars in 32 Bit precision!\n");
+}
+<SCALARWPREC>64 {
+  scalar_precision_write_flag = 64;
+  if(myverbose!=0) printf("Save scalars in 64 Bit precision!\n");
+}
 <REPRORND>yes {
   reproduce_randomnumber_flag = 1;
   if(myverbose!=0) printf("Use reproducable randomnumbers!\n");
@@ -2194,6 +2212,8 @@ int read_input(char * conf_file){
   gmresdr_nr_ev = _default_gmresdr_nr_ev;
   gauge_precision_read_flag = _default_gauge_precision_read_flag;
   gauge_precision_write_flag = _default_gauge_precision_write_flag;
+  scalar_precision_read_flag = _default_scalar_precision_read_flag;
+  scalar_precision_write_flag = _default_scalar_precision_write_flag;
   g_disable_IO_checks = _default_g_disable_IO_checks;
   reproduce_randomnumber_flag = _default_reproduce_randomnumber_flag;
   g_sloppy_precision_flag = _default_g_sloppy_precision_flag;

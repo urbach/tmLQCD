@@ -39,6 +39,7 @@ libio_TARGETS = utils_engineering \
 		gauge_read_binary \
 		gauge_read \
 		gauge_write \
+		scalar_read \
 		utils_write_xlf \
 		utils_write_xlf_xml \
 		utils_write_ildg_format \

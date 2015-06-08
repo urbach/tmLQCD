@@ -70,6 +70,8 @@ extern "C"
   extern int return_check_interval;
   extern int gauge_precision_read_flag;
   extern int gauge_precision_write_flag;
+  extern int scalar_precision_read_flag;
+  extern int scalar_precision_write_flag;
   extern int reproduce_randomnumber_flag;
   extern double stout_rho;
   extern int stout_no_iter;
