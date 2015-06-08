@@ -83,10 +83,10 @@
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
-#include "meas/measurements.h"
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
+#include "meas/measurements.h"
 
 extern int nstore;
 int check_geometry();
