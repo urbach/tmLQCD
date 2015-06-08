@@ -64,8 +64,10 @@
 #define _default_write_cp_flag 1
 #define _default_cp_interval 5
 #define _default_nstore 0
+#define _default_nscalar 0
 #define _default_rlxd_input_filename "last_state"
 #define _default_gauge_input_filename "conf"
+#define _default_scalar_input_filename "scalarconf"
 #define _default_read_source_flag 0
 #define _default_source_filename "source"
 #define _default_g_stdio_proc 0

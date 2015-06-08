@@ -114,11 +114,13 @@ inline void rmQuotes(char *str){
   int write_cp_flag;
   int cp_interval;
   int nstore;
+  int nscalar;
   int index_start, index_end;
   int random_seed;
   int rlxd_level;
   char rlxd_input_filename[500];
   char gauge_input_filename[500];
+  char scalar_input_filename[500];
   int read_source_flag;
   int return_check_flag, return_check_interval;
   int gauge_precision_read_flag;
@@ -195,6 +197,7 @@ inline void rmQuotes(char *str){
 %x NSAVE
 %x RLXDINPUTFILE
 %x GAUGEINPUTFILE
+%x SCALARINPUTFILE
 %x GAUGERPREC
 %x GAUGEWPREC
 %x DSBLIOCHECK
@@ -203,6 +206,7 @@ inline void rmQuotes(char *str){
 %x WRITECP
 %x CPINT
 %x NSTORE
+%x NSCALAR
 %x TT
 %x LL
 %x LLX
@@ -344,13 +348,16 @@ inline void rmQuotes(char *str){
 ^Measurements{EQL}                 BEGIN(NMEAS);
 ^NSave{EQL}                        BEGIN(NSAVE);
 ^GaugeFieldInFile{EQL}             BEGIN(GAUGEINPUTFILE);
+^ScalarFieldInFile{EQL}            BEGIN(SCALARINPUTFILE);
 ^RlxdStateInFile{EQL}              BEGIN(RLXDINPUTFILE);
 ^SubtractEVForCG{EQL}              BEGIN(SUBEVCG);
 ^WriteCheckpoints{EQL}             BEGIN(WRITECP);
 ^CheckpointInterval{EQL}           BEGIN(CPINT);
 ^GaugeConfigInputFile{EQL}         BEGIN(GAUGEINPUTFILE);
+^ScalarConfigInputFile{EQL}        BEGIN(SCALARINPUTFILE);
 ^RlxdInputFile{EQL}                BEGIN(RLXDINPUTFILE);
 ^InitialStoreCounter{EQL}          BEGIN(NSTORE);
+^InitialScalarCounter{EQL}         BEGIN(NSCALAR);
 ^StdIOProcessor{EQL}               BEGIN(IOPROC);
 ^Indices{EQL}                      BEGIN(IDX);
 ^BCAngleT{EQL}                     BEGIN(BOUNDT);
@@ -1737,6 +1744,14 @@ inline void rmQuotes(char *str){
   strcpy(gauge_input_filename,yytext);
   if(myverbose!=0) printf("Gauge Configuration input filename set to %s\n",yytext);
 }
+<SCALARINPUTFILE>{FILENAME} {
+  int length = strlen(yytext)+1;
+  if(length >= sizeof(scalar_input_filename)/sizeof(char) )
+    yy_fatal_error("Filename ScalarConfigInputFile too long! (see read_input.l)\n");
+
+  strcpy(scalar_input_filename,yytext);
+  if(myverbose!=0) printf("Scalar Configuration input filename set to %s\n",yytext);
+}
 <NSTORE>{DIGIT}+   {
   nstore=atoi(yytext);
   if(myverbose!=0) printf("Initial store counter set to %s\n",yytext);
@@ -1744,6 +1759,14 @@ inline void rmQuotes(char *str){
 <NSTORE>readin {
   nstore=-1;
   if(myverbose!=0) printf("Trying to read InitialStoreCounter from file .nstore_counter\n");
+}
+<NSCALAR>{DIGIT}+   {
+  nscalar=atoi(yytext);
+  if(myverbose!=0) printf("Initial scalar counter set to %s\n",yytext);
+}
+<NSCALAR>readin {
+  nscalar=-1;
+  if(myverbose!=0) printf("Trying to read InitialScalarCounter from file .nscalar_counter\n");
 }
 <IOPROC>all         {
   g_stdio_proc = -1;
@@ -2139,8 +2162,10 @@ int read_input(char * conf_file){
   write_cp_flag = _default_write_cp_flag;
   cp_interval = _default_cp_interval;
   nstore = _default_nstore;
+  nscalar = _default_nscalar;
   strcpy(rlxd_input_filename, _default_rlxd_input_filename);
   strcpy(gauge_input_filename, _default_gauge_input_filename);
+  strcpy(scalar_input_filename, _default_scalar_input_filename);
   g_stdio_proc = _default_g_stdio_proc;
   index_start = _default_index_start;
   index_end = _default_index_end;
