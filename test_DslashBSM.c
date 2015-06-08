@@ -58,6 +58,7 @@
 #include "start.h"
 #include "boundary.h"
 #include "io/gauge.h"
+#include "io/scalar.h"
 #include "global.h"
 #include "git_hash.h"
 #include "getopt.h"
@@ -103,6 +104,7 @@ int main(int argc,char *argv[])
   char datafilename[206];
   char parameterfilename[206];
   char conf_filename[50];
+  char scalar_filename[50];
   char * input_filename = NULL;
   char * filename = NULL;
   double plaquette_energy;
@@ -273,6 +275,7 @@ int main(int argc,char *argv[])
 
 	start_ranlux(1, 123456);
 
+	// read gauge field
 	if( strcmp(gauge_input_filename, "create_random_gaugefield") == 0 ) {
 		random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
 	}
@@ -296,6 +299,31 @@ int main(int argc,char *argv[])
 		}
 	}
 
+	// read scalar field
+	if( strcmp(scalar_input_filename, "create_random_scalarfield") == 0 ) {
+		for( int s=0; s<numbScalarFields; s++ )
+			ranlxd(g_scalar_field[s], VOLUME);
+	}
+	else {
+		sprintf(scalar_filename, "%s.%d", scalar_input_filename, nscalar);
+		if (g_cart_id == 0) {
+		  printf("#\n# Trying to read scalar field from file %s in %s precision.\n",
+				scalar_filename, (scalar_precision_read_flag == 32 ? "single" : "double"));
+		  fflush(stdout);
+		}
+
+		int i;
+		if( (i = read_scalar_field(scalar_filename,g_scalar_field)) !=0) {
+		  fprintf(stderr, "Error %d while reading scalar field from %s\n Aborting...\n", i, scalar_filename);
+		  exit(-2);
+		}
+
+		if (g_cart_id == 0) {
+			printf("# Finished reading scalar field.\n");
+			fflush(stdout);
+		}
+	}
+
 
 
 #ifdef MPI
@@ -313,6 +341,8 @@ int main(int argc,char *argv[])
 #ifdef MPI
 	/*For parallelization: exchange the gaugefield */
 	xchange_gauge(g_gauge_field);
+	for( int s=0; s<numbScalarFields; s++ )
+		generic_exchange(g_scalar_field[s], sizeof(scalar));
 #endif
 
 	/*initialize the bispinor fields*/
@@ -329,15 +359,6 @@ int main(int argc,char *argv[])
 	if(g_proc_id==0) {
 		printf("\n# ||source||^2 = %e\n\n", squarenorm);
 		fflush(stdout);
-	}
-
-	// random scalar field
-	for( int s=0; s<numbScalarFields; s++ )
-	{
-		ranlxd(g_scalar_field[s], VOLUME);
-#ifdef MPI
-		generic_exchange(g_scalar_field[s], sizeof(scalar));
-#endif
 	}
 
 
