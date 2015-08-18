@@ -27,7 +27,7 @@
 * otherwise a simple application of Dslash on a spinor will be tested.
 *
 *******************************************************************************/
-#define TEST_INVERSION 1
+#define TEST_INVERSION 0
 
 
 #ifdef HAVE_CONFIG_H
@@ -51,6 +51,7 @@
 #endif
 #include "gettime.h"
 #include "su3.h"
+#include "linalg/scalar_prod.h"
 #include "su3adj.h"
 #include "ranlxd.h"
 #include "geometry_eo.h"
@@ -227,7 +228,7 @@ int main(int argc,char *argv[])
 	init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
 
 
-	j = init_bispinor_field(VOLUMEPLUSRAND, 2*k_max);
+	j = init_bispinor_field(VOLUMEPLUSRAND, 3*k_max);
 	if ( j!= 0) {
 		fprintf(stderr, "Not enough memory for bispinor fields! Aborting...\n");
 		exit(0);
@@ -350,6 +351,9 @@ int main(int argc,char *argv[])
 	sdt=0.;
 	random_spinor_field_lexic( (spinor*)(g_bispinor_field[1]), reproduce_randomnumber_flag, RN_GAUSS);
 	random_spinor_field_lexic( (spinor*)(g_bispinor_field[1])+VOLUME, reproduce_randomnumber_flag, RN_GAUSS);
+	// for the D^\dagger test:
+	random_spinor_field_lexic( (spinor*)(g_bispinor_field[4]), reproduce_randomnumber_flag, RN_GAUSS);
+	random_spinor_field_lexic( (spinor*)(g_bispinor_field[4])+VOLUME, reproduce_randomnumber_flag, RN_GAUSS);
 #if defined MPI
 	generic_exchange(g_bispinor_field[1], sizeof(bispinor));
 #endif
@@ -376,6 +380,17 @@ int main(int argc,char *argv[])
 	   VOLUME, 0, &D_psi_BSM);
 #else
 	D_psi_BSM(g_bispinor_field[0], g_bispinor_field[1]);
+
+	/* test D^\dagger */
+	// < D w, v >
+	_Complex double prod1 = scalar_prod((spinor*)g_bispinor_field[0], (spinor*)g_bispinor_field[4], 2*VOLUME, 1);
+	printf("< D w, v >        = %f+I*%f\n", creal(prod1), cimag(prod1));
+
+	// < w, D^\dagger v >
+	D_psi_dagger_BSM(g_bispinor_field[5], g_bispinor_field[4]);
+	_Complex double prod2 = scalar_prod((spinor*)g_bispinor_field[1], (spinor*)g_bispinor_field[5], 2*VOLUME, 1);
+	printf("< w, D^dagger v > = %f+I*%f\n", creal(prod2), cimag(prod2));
+	printf("|diff.|           = %e\n",cabs(prod2-prod1));
 #endif
 
 	t2 = gettime();
