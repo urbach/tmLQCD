@@ -45,6 +45,7 @@
 #include "operator/D_psi.h"
 #include "solver/dirac_operator_eigenvectors.h"
 #include "buffers/utils.h"
+#include "linalg_eo.h"
 
 
 /* operation out(x) += F(y)*in(x)
@@ -422,14 +423,17 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
 		// the local part (not local in phi)
 
 		// tmpr = m0_BSM*Q(x)
-		_vector_mul(rr->sp_up.s0, m0_BSM, s->sp_up.s0);
-		_vector_mul(rr->sp_up.s1, m0_BSM, s->sp_up.s1);
-		_vector_mul(rr->sp_up.s2, m0_BSM, s->sp_up.s2);
-		_vector_mul(rr->sp_up.s3, m0_BSM, s->sp_up.s3);
-		_vector_mul(rr->sp_dn.s0, m0_BSM, s->sp_dn.s0);
-		_vector_mul(rr->sp_dn.s1, m0_BSM, s->sp_dn.s1);
-		_vector_mul(rr->sp_dn.s2, m0_BSM, s->sp_dn.s2);
-		_vector_mul(rr->sp_dn.s3, m0_BSM, s->sp_dn.s3);
+		//_vector_mul(rr->sp_up.s0, m0_BSM, s->sp_up.s0);
+		//_vector_mul(rr->sp_up.s1, m0_BSM, s->sp_up.s1);
+		//_vector_mul(rr->sp_up.s2, m0_BSM, s->sp_up.s2);
+		//_vector_mul(rr->sp_up.s3, m0_BSM, s->sp_up.s3);
+		//_vector_mul(rr->sp_dn.s0, m0_BSM, s->sp_dn.s0);
+		//_vector_mul(rr->sp_dn.s1, m0_BSM, s->sp_dn.s1);
+		//_vector_mul(rr->sp_dn.s2, m0_BSM, s->sp_dn.s2);
+		//_vector_mul(rr->sp_dn.s3, m0_BSM, s->sp_dn.s3);
+                // no longer needed now...
+		_spinor_null(rr->sp_up);
+		_spinor_null(rr->sp_dn);
 
 
 		// tmpr += (\eta_BSM+2*\rho_BSM) * F(x)*Q(x)
@@ -562,15 +566,17 @@ void D_psi_dagger_BSM(bispinor * const P, bispinor * const Q){
       // the local part (not local in phi)
       
       // tmpr = m0_BSM*Q(x)
-      // can likely be replaced by setting it to zero
-      _vector_mul(rr->sp_up.s0, m0_BSM, s->sp_up.s0);
-      _vector_mul(rr->sp_up.s1, m0_BSM, s->sp_up.s1);
-      _vector_mul(rr->sp_up.s2, m0_BSM, s->sp_up.s2);
-      _vector_mul(rr->sp_up.s3, m0_BSM, s->sp_up.s3);
-      _vector_mul(rr->sp_dn.s0, m0_BSM, s->sp_dn.s0);
-      _vector_mul(rr->sp_dn.s1, m0_BSM, s->sp_dn.s1);
-      _vector_mul(rr->sp_dn.s2, m0_BSM, s->sp_dn.s2);
-      _vector_mul(rr->sp_dn.s3, m0_BSM, s->sp_dn.s3);
+      //_vector_mul(rr->sp_up.s0, m0_BSM, s->sp_up.s0);
+      //_vector_mul(rr->sp_up.s1, m0_BSM, s->sp_up.s1);
+      //_vector_mul(rr->sp_up.s2, m0_BSM, s->sp_up.s2);
+      //_vector_mul(rr->sp_up.s3, m0_BSM, s->sp_up.s3);
+      //_vector_mul(rr->sp_dn.s0, m0_BSM, s->sp_dn.s0);
+      //_vector_mul(rr->sp_dn.s1, m0_BSM, s->sp_dn.s1);
+      //_vector_mul(rr->sp_dn.s2, m0_BSM, s->sp_dn.s2);
+      //_vector_mul(rr->sp_dn.s3, m0_BSM, s->sp_dn.s3);
+      // no longer needed now...
+	_spinor_null(rr->sp_up);
+	_spinor_null(rr->sp_dn);
       
       // tmpr += (\eta_BSM+2*\rho_BSM) * Fbar(x)*Q(x)
       Fadd(rr, s, phi, eta_BSM+2.0*rho_BSM, -1.);
@@ -636,3 +642,13 @@ void D_psi_dagger_BSM(bispinor * const P, bispinor * const Q){
 #endif
 }
 
+/* Q2_psi_BSM acts on bispinor fields */
+void Q2_psi_BSM(bispinor * const P, bispinor * const Q){
+
+D_psi_dagger_BSM(g_bispinor_field[3] , Q);
+D_psi_BSM(P, g_bispinor_field[3]);
+assign_add_mul_r((spinor*)P, (spinor*)Q, m0_BSM, 2*VOLUME); 
+/* Q and P are spinor, not bispinor ==> made a cast */
+/* the use of [3] has to be changed to avoid future conflicts */
+
+}
