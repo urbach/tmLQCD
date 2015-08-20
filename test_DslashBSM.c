@@ -27,7 +27,7 @@
 * otherwise a simple application of Dslash on a spinor will be tested.
 *
 *******************************************************************************/
-#define TEST_INVERSION 0
+#define TEST_INVERSION 1
 
 
 #ifdef HAVE_CONFIG_H
@@ -76,6 +76,7 @@
 #include "linalg/comp_decomp.h"
 #include "linalg/assign_diff_mul.h"
 #include "solver/fgmres4bispinors.h"
+#include "solver/solver.h"
 
 #ifdef PARALLELT
 #	define SLICE (LX*LY*LZ/2)
@@ -375,9 +376,11 @@ int main(int argc,char *argv[])
 
 	/* here the actual Dslash application */
 #if TEST_INVERSION
-	fgmres4bispinors(g_bispinor_field[0], g_bispinor_field[1],
-	   16, 100, 1.0e-8, 1.0e-8,
-	   VOLUME, 0, &D_psi_BSM);
+//	fgmres4bispinors(g_bispinor_field[0], g_bispinor_field[1],
+//	   16, 100, 1.0e-8, 1.0e-8,
+//	   VOLUME, 0, &Q2_psi_BSM);
+	cg_her_bi(g_bispinor_field[0], g_bispinor_field[1],
+           25000, 1.0e-14, 1, VOLUME, &Q2_psi_BSM);
 #else
 	D_psi_BSM(g_bispinor_field[0], g_bispinor_field[1]);
 
@@ -408,7 +411,7 @@ int main(int argc,char *argv[])
 
 #if TEST_INVERSION
 	// check result
-	D_psi_BSM(g_bispinor_field[2], g_bispinor_field[0]);
+	Q2_psi_BSM(g_bispinor_field[2], g_bispinor_field[0]);
 	assign_diff_mul((spinor*)g_bispinor_field[2], (spinor*)g_bispinor_field[1], 1.0, 2*VOLUME);
 	squarenorm = square_norm((spinor*)g_bispinor_field[2], 2*VOLUME, 1);
 	if(g_proc_id==0) {
