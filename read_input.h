@@ -115,6 +115,8 @@ extern "C"
 
   extern int nblocks_t, nblocks_x, nblocks_y, nblocks_z;
 
+  extern int have_bsm_op;
+
   int read_input(char *);
   int reread_input(char *);
   

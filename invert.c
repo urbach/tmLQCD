@@ -52,6 +52,7 @@
 #include "xchange/xchange.h"
 #endif
 #include <io/utils.h>
+#include <io/scalar.h>
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
@@ -97,6 +98,7 @@ int main(int argc, char *argv[])
   char datafilename[206];
   char parameterfilename[206];
   char conf_filename[50];
+  char scalar_filename[50];
   char * input_filename = NULL;
   char * filename = NULL;
   double plaquette_energy;
@@ -217,6 +219,14 @@ int main(int argc, char *argv[])
     exit(-1);
   }
 
+  if(have_bsm_op) {
+    j = init_bispinor_field(VOLUMEPLUSRAND, 6);
+    if ( j!= 0) {
+      fprintf(stderr, "Not enough memory for bispinor fields! Aborting...\n");
+      exit(0);
+    }
+  }
+
   if (g_running_phmc) {
     j = init_chi_spinor_field(VOLUMEPLUSRAND / 2, 20);
     if (j != 0) {
@@ -312,6 +322,34 @@ int main(int argc, char *argv[])
         fflush(stdout);
       }
     }
+
+    if(have_bsm_op) {
+      // read scalar field
+      if( strcmp(scalar_input_filename, "create_random_scalarfield") == 0 ) {
+	for( int s = 0; s < 4; s++)
+	  ranlxd(g_scalar_field[s], VOLUME);
+      }
+      else {
+	sprintf(scalar_filename, "%s.%d", scalar_input_filename, nscalar);
+	if (g_cart_id == 0) {
+	  printf("#\n# Trying to read scalar field from file %s in %s precision.\n",
+		 scalar_filename, (scalar_precision_read_flag == 32 ? "single" : "double"));
+	  fflush(stdout);
+	}
+	
+	int i;
+	if( (i = read_scalar_field(scalar_filename,g_scalar_field)) !=0) {
+	  fprintf(stderr, "Error %d while reading scalar field from %s\n Aborting...\n", i, scalar_filename);
+	  exit(-2);
+	}
+	
+	if (g_cart_id == 0) {
+	  printf("# Finished reading scalar field.\n");
+	  fflush(stdout);
+	}
+      }
+    }
+
 
     if (reweighting_flag == 1) {
       reweighting_factor(reweighting_samples, nstore);
@@ -483,6 +521,7 @@ int main(int argc, char *argv[])
   free_blocks();
   free_dfl_subspace();
   free_gauge_field();
+  free_scalar_field();
   free_geometry_indices();
   free_spinor_field();
   free_moment_field();

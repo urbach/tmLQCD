@@ -74,7 +74,7 @@ SUBDIRS = ${USESUBDIRS}
 # delete the default suffix rules
 .SUFFIXES:
 
-all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark test_DslashBSM
+all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark 
 
 $(SUBDIRS):
 	$(MAKE) --directory=$@

@@ -34,6 +34,7 @@
 #define DBTMWILSON 3
 #define CLOVER 4
 #define DBCLOVER 5
+#define BSM 6
 
 #define max_no_operators 10
 
@@ -102,6 +103,7 @@ typedef struct {
   void (*applyQp) (spinor * const, spinor * const);
   void (*applyQm) (spinor * const, spinor * const);
   void (*applyQsq) (spinor * const, spinor * const);
+  void (*applyQsqbi) (bispinor * const, bispinor * const);
   void (*applyMp) (spinor * const, spinor * const);
   void (*applyMm) (spinor * const, spinor * const);
   void (*applyDbQsq) (spinor * const, spinor * const, spinor * const, spinor * const);

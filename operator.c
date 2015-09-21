@@ -37,6 +37,7 @@
 #include "operator/tm_operators.h"
 #include "linalg_eo.h"
 #include "operator/D_psi.h"
+#include "operator/D_psi_BSM.h"
 #include "operator/Dov_psi.h"
 #include "operator/tm_operators_nd.h"
 #include "operator/Hopping_Matrix.h"
@@ -44,6 +45,7 @@
 #include "invert_doublet_eo.h"
 #include "invert_overlap.h"
 #include "invert_clover_eo.h"
+#include "init/init_scalar_field.h"
 #include "boundary.h"
 #include "start.h"
 #include "solver/eigenvalues.h"
@@ -129,7 +131,7 @@ int add_operator(const int type) {
     optr->m = 0.;
     optr->inverter = &op_invert;
   }
-  if(optr->type == DBTMWILSON || optr->type == DBCLOVER) {
+  if(optr->type == DBTMWILSON || optr->type == DBCLOVER || optr->type == BSM) {
     optr->no_flavours = 2;
     g_running_phmc = 1;
   }
@@ -189,8 +191,6 @@ int init_operators() {
              fprintf(stderr,"Incremental EigCG solver is added only with Even-Odd preconditioning!. Forcing\n");
           optr->even_odd_flag = 1; 
         }
-
-
       }
       else if(optr->type == OVERLAP) {
 	optr->even_odd_flag = 0;
@@ -210,6 +210,16 @@ int init_operators() {
       else if(optr->type == DBCLOVER) {
 	optr->even_odd_flag = 1;
 	optr->applyDbQsq = &Qtm_pm_ndpsi;
+      }
+      else if(optr->type == BSM) {
+	optr->even_odd_flag = 0;
+        optr->applyQsqbi = &Q2_psi_BSM;
+	// generate space for 4
+	int j = init_scalar_field(VOLUMEPLUSRAND, 4);
+	if ( j!= 0) {
+	  fprintf(stderr, "Not enough memory for scalar fields! Aborting...\n");
+	  exit(0);
+	}
       }
     }
   }
@@ -424,6 +434,72 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     invert_overlap(op_id, index_start); 
 
     if(write_prop) optr->write_prop(op_id, index_start, 0);
+  }
+  else if(optr->type == BSM) {
+    for(i = 0; i < SourceInfo.no_flavours; i++) {
+
+      convert_eo_to_lexic(g_spinor_field[8], optr->sr0, optr->sr1);
+      convert_eo_to_lexic(g_spinor_field[9], optr->sr2, optr->sr3);
+      compact(g_bispinor_field[1], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+
+      cg_her_bi(g_bispinor_field[0], g_bispinor_field[1],
+		optr->maxiter, optr->eps_sq, optr->rel_prec, VOLUME, optr->applyQsqbi);
+
+      optr->applyQsqbi(g_bispinor_field[2], g_bispinor_field[0]);
+      assign_diff_mul((spinor*)g_bispinor_field[2], (spinor*)g_bispinor_field[1], 1.0, 2*VOLUME);
+      double squarenorm = square_norm((spinor*)g_bispinor_field[2], 2*VOLUME, 1);
+      if(g_proc_id==0) {
+	printf("# BSM Dirac inversion ||A*result1-b||^2 = %e\n\n", squarenorm);
+	fflush(stdout);
+      }
+
+
+      D_psi_dagger_BSM(g_bispinor_field[1], g_bispinor_field[0]);
+      decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], g_bispinor_field[1]);
+
+      convert_lexic_to_eo(optr->prop0, optr->prop1, g_spinor_field[DUM_DERI]);
+      convert_lexic_to_eo(optr->prop2, optr->prop3, g_spinor_field[DUM_DERI+1]);
+
+      /* write propagator */
+      if(write_prop) optr->write_prop(op_id, index_start, 2*i);
+
+      compact(g_bispinor_field[0], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+
+      D_psi_BSM(g_bispinor_field[1], g_bispinor_field[0]);
+
+      cg_her_bi(g_bispinor_field[0], g_bispinor_field[1],
+		optr->maxiter, optr->eps_sq, optr->rel_prec, VOLUME, optr->applyQsqbi);
+
+      optr->applyQsqbi(g_bispinor_field[2], g_bispinor_field[0]);
+      assign_diff_mul((spinor*)g_bispinor_field[2], (spinor*)g_bispinor_field[1], 1.0, 2*VOLUME);
+      squarenorm = square_norm((spinor*)g_bispinor_field[2], 2*VOLUME, 1);
+      if(g_proc_id==0) {
+	printf("# BSM Dirac inversion ||A*result1-b||^2 = %e\n\n", squarenorm);
+	fflush(stdout);
+      }
+
+      D_psi_dagger_BSM(g_bispinor_field[1], g_bispinor_field[0]);
+      decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], g_bispinor_field[1]);
+
+      convert_lexic_to_eo(optr->prop0, optr->prop1, g_spinor_field[DUM_DERI]);
+      convert_lexic_to_eo(optr->prop2, optr->prop3, g_spinor_field[DUM_DERI+1]);
+
+      /* write propagator */
+      if(write_prop) optr->write_prop(op_id, index_start, 2*i+1);
+
+      // mirror sources
+      if(i == 0 && SourceInfo.no_flavours == 2 && SourceInfo.type != 1) {
+	spinor * tmp;
+	tmp = optr->sr0;
+	optr->sr0 = optr->sr2;
+	optr->sr2 = tmp;
+	tmp = optr->sr1;
+	optr->sr1 = optr->sr3;
+	optr->sr3 = tmp;
+      }
+      /* volume sources need only one inversion */
+      else if(SourceInfo.type == 1) i++;
+    }
   }
   etime = gettime();
   if (g_cart_id == 0 && g_debug_level > 0) {

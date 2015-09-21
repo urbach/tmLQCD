@@ -181,6 +181,7 @@ inline void rmQuotes(char *str){
 
   int use_preconditioning;
 
+  int have_bsm_op;
 
 %}
 
@@ -223,9 +224,6 @@ inline void rmQuotes(char *str){
 %x BOUNDX
 %x BOUNDY
 %x BOUNDZ
-%x RHOBSM
-%x ETABSM
-%x M0BSM
 %X READSOURCE
 %x SOURCEFORMAT
 %x SOURCEFILE
@@ -279,10 +277,12 @@ inline void rmQuotes(char *str){
 %x OVERLAPOP
 %x CLOVEROP
 %x DBCLOVEROP
+%x BSMOP
 %x TMSOLVER
 %x DBTMSOLVER
 %x CSWSOLVER
 %x OVSOLVER
+%x BSMSOLVER
 
 %x INITMONOMIAL
 %x DETMONOMIAL
@@ -398,9 +398,6 @@ inline void rmQuotes(char *str){
 ^NoSamples{EQL}                    BEGIN(NOSAMPLES);
 ^SplittedPropagator{EQL}           BEGIN(PROPSPLIT);
 ^UsePreconditioning{EQL}           BEGIN(PRECONDITIONING);
-^ParamEtaBSM{EQL}                  BEGIN(ETABSM);
-^ParamRhoBSM{EQL}                  BEGIN(RHOBSM);
-^ParamMassBSM{EQL}                 BEGIN(M0BSM);
 
 ^BeginMeasurement{SPC}+            BEGIN(INITMEASUREMENT);
 ^ComputeModeNumber{EQL}            BEGIN(COMPUTEMN);
@@ -503,6 +500,10 @@ inline void rmQuotes(char *str){
   else if(strcmp(yytext, "OVERLAP")==0) {
     optr->type = OVERLAP;
   }
+  else if(strcmp(yytext, "BSM")==0) {
+    optr->type = BSM;
+    have_bsm_op = 1;
+  }
   else {
     fprintf(stderr, "Unknown operator type %s in line %d\n", yytext, line_of_file);
     exit(1);
@@ -521,7 +522,8 @@ inline void rmQuotes(char *str){
   else if(optr->type == TMWILSON) BEGIN(TMOP);
   else if(optr->type == DBTMWILSON) BEGIN(DBTMOP);
   else if(optr->type == DBCLOVER) BEGIN(DBCLOVEROP);
-  else BEGIN(OVERLAPOP);
+  else if(optr->type == OVERLAP) BEGIN(OVERLAPOP);
+  else BEGIN(BSMOP);
 }
 
 <WILSONOP,TMOP,OVERLAPOP,DBTMOP,CLOVEROP,DBCLOVEROP>{
@@ -530,6 +532,9 @@ inline void rmQuotes(char *str){
     optr->kappa = c;
     if(myverbose) printf("  kappa set to %f line %d operator %d\n", c, line_of_file, current_operator);
   }
+}
+
+<WILSONOP,TMOP,OVERLAPOP,DBTMOP,CLOVEROP,DBCLOVEROP,BSMOP>{
   {SPC}*MaxSolverIterations{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     optr->maxiter = a;
@@ -675,6 +680,28 @@ inline void rmQuotes(char *str){
   }
 }
 
+<BSMOP>{
+  {SPC}*Solver{EQL} {
+    name_caller = YY_START; 
+    BEGIN(BSMSOLVER);
+  }
+  {SPC}*rho{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    rho_BSM = c;
+    if(myverbose != 0) printf("  BSM parameter rho set to %f\n", rho_BSM);
+  }
+  {SPC}*eta{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    eta_BSM = c;
+    if(myverbose != 0) printf("  BSM parameter eta set to %f\n", eta_BSM);
+  }
+  {SPC}*m0{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z0] = %lf", name, &c);
+    m0_BSM = c;
+    if(myverbose != 0) printf("  BSM parameter m0 set to %f\n", m0_BSM);
+  }
+}
+
 <WILSONOP,TMOP>{
   {SPC}*Solver{EQL} {
     name_caller = YY_START; 
@@ -781,7 +808,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<DBTMSOLVER,TMSOLVER,CSWSOLVER>{
+<DBTMSOLVER,TMSOLVER,CSWSOLVER,BSMSOLVER>{
   cg {
     optr->solver=1;
     if(myverbose) printf("  Solver set to CG line %d operator %d\n", line_of_file, current_operator);
@@ -1766,10 +1793,6 @@ inline void rmQuotes(char *str){
   nscalar=atoi(yytext);
   if(myverbose!=0) printf("Initial scalar counter set to %s\n",yytext);
 }
-<NSCALAR>readin {
-  nscalar=-1;
-  if(myverbose!=0) printf("Trying to read InitialScalarCounter from file .nscalar_counter\n");
-}
 <IOPROC>all         {
   g_stdio_proc = -1;
   if(myverbose!=0) printf("All processors will give output to stdout\n");
@@ -1815,18 +1838,6 @@ inline void rmQuotes(char *str){
 <BOUNDZ>{FLT} {
   X3 = atof(yytext);
   if(myverbose != 0) printf("X3 for boundary cond. in z-direction set to %e times pi\n", X3);
-}
-<RHOBSM>{FLT} {
-  rho_BSM = atof(yytext);
-  if(myverbose != 0) printf("parameter rho_BSM set to %f\n", rho_BSM);
-}
-<ETABSM>{FLT} {
-  eta_BSM = atof(yytext);
-  if(myverbose != 0) printf("parameter eta_BSM set to %f\n", eta_BSM);
-}
-<M0BSM>{FLT} {
-  m0_BSM = atof(yytext);
-  if(myverbose != 0) printf("parameter m0_BSM set to %f\n", m0_BSM);
 }
 <READSOURCE>yes     {
   read_source_flag=1;
@@ -2088,7 +2099,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,BSMOP>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
@@ -2219,6 +2230,7 @@ int read_input(char * conf_file){
   g_sloppy_precision_flag = _default_g_sloppy_precision_flag;
   use_stout_flag = _default_use_stout_flag;
   use_preconditioning = _default_use_preconditioning;
+  have_bsm_op = 0;
   stout_rho = _default_stout_rho;
   stout_no_iter = _default_stout_no_iter;
 

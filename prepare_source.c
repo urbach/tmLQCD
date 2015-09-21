@@ -62,7 +62,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
   SourceInfo.sample = isample;
   SourceInfo.ix = ix;
 
-  if(optr->type != DBTMWILSON && optr->type != DBCLOVER) {
+  if(optr->type != DBTMWILSON && optr->type != DBCLOVER && optr->type != BSM) {
     SourceInfo.no_flavours = 1;
     /* no volume sources */
     if(source_type != 1) {
@@ -193,7 +193,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     /*       convert_eo_to_lexic(optr->sr0, g_spinor_field[0], g_spinor_field[1]); */
     /*     } */
   }
-  else { /* for the ND 2 flavour twisted operator */
+  else { /* for the ND 2 flavour twisted operator and BSM */
     SourceInfo.no_flavours = 2;
     zero_spinor_field(g_spinor_field[0], VOLUME/2);
     zero_spinor_field(g_spinor_field[1], VOLUME/2);
@@ -204,10 +204,10 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
         }
         else {
           source_spinor_field_point_from_file(g_spinor_field[2], g_spinor_field[3], 
-                              is, ic, source_location);
+					      is, ic, source_location);
         }
-          }
-          else {
+      }
+      else {
         if(SourceInfo.splitted) {
           sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, SourceInfo.t, ix);
         }
@@ -237,13 +237,15 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       gaussian_volume_source(g_spinor_field[2], g_spinor_field[3],
                              isample, nstore, 2);
     }
-    mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[0], g_spinor_field[2], +1., VOLUME/2);
-    mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[1], g_spinor_field[3], +1., VOLUME/2);
-    assign(g_spinor_field[0], g_spinor_field[4], VOLUME/2);
-    assign(g_spinor_field[1], g_spinor_field[5], VOLUME/2);
-    assign(g_spinor_field[2], g_spinor_field[6], VOLUME/2);
-    assign(g_spinor_field[3], g_spinor_field[7], VOLUME/2);
-
+    if(optr->type != BSM) {
+      mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[0], g_spinor_field[2], +1., VOLUME/2);
+      mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[1], g_spinor_field[3], +1., VOLUME/2);
+      assign(g_spinor_field[0], g_spinor_field[4], VOLUME/2);
+      assign(g_spinor_field[1], g_spinor_field[5], VOLUME/2);
+      assign(g_spinor_field[2], g_spinor_field[6], VOLUME/2);
+      assign(g_spinor_field[3], g_spinor_field[7], VOLUME/2);
+    }
+    
     optr->sr0 = g_spinor_field[0];
     optr->sr1 = g_spinor_field[1];
     optr->sr2 = g_spinor_field[2];
