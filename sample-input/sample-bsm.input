@@ -1,0 +1,52 @@
+# example input file for invert
+# for CG solver
+# requires a 4^4 gauge configuration conf.0000
+
+L=4
+T=4
+NrXProcs = 2
+NrYProcs = 2
+NrZProcs = 2
+
+
+DebugLevel = 5
+InitialStoreCounter = 0
+Measurements = 1
+BCAngleT = 1
+ThetaX = 1
+GaugeConfigInputFile = conf
+# this creates a random scalar field
+# otherwise the basefilename must be given here
+ScalarConfigInputFile = create_random_scalarfield
+
+# this is a must right now
+UseEvenOdd = no
+
+
+UseSloppyPrecision = no
+OmpNumThreads = 2
+DisableIOChecks = no
+
+SourceType = point
+Indices = 0
+#Indices = 0-11
+
+#SourceType = timeslice
+#SourceTimeSlice = 38
+
+#SourceType = volume
+#NoSamples = 1
+
+ReadSource = no
+SourceFilename = propagator 
+
+BeginOperator BSM
+  rho = 1.
+  eta = 1.
+  m0 = 0.
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+EndOperator
+
+
