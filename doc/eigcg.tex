@@ -1,0 +1,118 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{color}
+%opening
+\title{}
+\author{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+\end{abstract}
+
+\section{}
+
+\subsection{The EigCG Solver}
+The EigCG solver \cite{Stathopoulos:2007zi} solves a  linear system using un-restarted CG and computes a few {\it approximate} eigenvectors with small eigenvalues. 
+When the solution for multiple right-hand sides is needed, as is usually the case in lattice calculations, the computed eigenvectors are used to deflate subsequent 
+systems leading to a faster convergence. Usually, the small number of eigenvectors computed with EigCG from solving a single linear system is not sufficient to 
+produce observed acceleration. More eigenvectors are accumulated {\it incrementally} while solving the first subset of linear systems. The total
+number of eigenvectors collected is usually limited by the available storage. In addition, usually one reaches a limit where more eigenvectors doesn't provide a 
+substantial acceleration for convergence any more. This phase is called a {\it build-up phase} during which we collect a reasonable number of eigenvectors for deflation. 
+After this build-up phase all subsequent systems will be solved with CG together with deflation. Deflation is performed using a single simple projection step. Since 
+the computed eigenvectors are approximate, it is usually necessary to restart CG one or more times and apply the deflation step. Combining CG with a deflation projection and restarting
+is called {\it init-CG} \cite{Stathopoulos:2007zi}. The algorithm for the entire process is called {\it Incremental EigCG} and is described schematically in Figure \ref{increigcg}.
+\subsubsection{Implementation}
+The implementation given in tmLQCD doesn't require all the right-hand sides to be available at the beginning but the systems are solved one after the other. Currently, the solver is available only
+for the even-odd preconditioned case with or without a clover term. A sample input file is also available. A description of the parameters is given below:
+
+\begin{verbatim}
+  Solver              = INCREIGCG  #name of the solver
+  UseEvenOdd          = yes #only available option at the moment
+  EigCGnrhs           total number of the linear systems to be solved
+  EigCGnrhs1          number of the first set of systems that will be 
+                      solved to tolerance EigCGtolsq1
+  EigCGtolsq1         convergence tolerance for the systems 1,..,EigCGnrhs1
+  SolverPrecision     convergence tolerance for systems EigCGnrhs1+1,..,EigCGnrhs
+  EigCGnev            number of eigenvectors to be computed by EigCG for every 
+                      system in the build-up phase
+  EigCGvmax           size of the search subspace used by EigCG 
+  EigCGldh            total number of eigenvectors that to be computed
+  EigCGrestolsq       tolerance for restarting init-CG 
+  EigCGRandGuessOpt   if 0 means use zero initial guess, 1 means use random intial 
+                      guess as a volume gaussian spinor
+  AddDownPropagator   if yes, the solver will still work but deflation may not be 
+                      as efficient since the eigenvectors for +mu and -mu will 
+                      be different.
+\end{verbatim}
+
+These options allow for some flexibility in setting the tolerance for the linear systems for the first 
+set of vectors. This can be helpful if one solves to a higher tolerance when computing eigenvectors but 
+then switches to low precision such as the case when using truncated solver methods for example. Using 
+a random initial guess can also be useful if one tries to avoid any bias of the computed eigenvectors when using
+point sources for example.
+\begin{figure}[htbp]
+\begin{center}
+\fbox{
+\begin{minipage}[t]{0.95\textwidth}
+\begin{center}
+\fbox{Incremental eigCG}
+\end{center}
+{\bf Description:} Solve the systems $A\ x_i = b_i$ for $i=1,2,\dots,N_r$\\
+{\bf Input Parameters:}\\
+$n_{ev}:$ Number of eigenvectors to be computed with EigCG.\\
+$m :$ Size of the search subspace to be used by EigCG.\\
+$N_{ev}:$ Total number of eigenvectors requested (usually $N_{ev}=k*n_{ev}$).\\
+$tol:$ tolerance for solving linear systems.\\
+$tol_{rest}:$ tolerance for restarting {it init-CG}.\\
+{\bf Algorithm:}
+\begin{tabbing}
+ x\=xxx\=xxx\=xxx\=\kill
+ Let $V$ be the matrix whose columns are the $m$ eigenvectors computed by EigCG.\\
+ Let $U$ be the matrix whose columns are the accumulated eigenvectors.\\
+ Let $H=U^\dagger A U$.\\
+ \underline{build-up phase}\\
+ \> for $i=1,2,\dots,k$\\
+ \> \> $r_0=b_i - A x_0$ where $x_0$ is the initial guess for system $i$.\\
+ \> \> Deflate: $x_0' = x_0 + U H^{-1} (U^\dagger r_0).$\\
+ \> \> Solve $A x_i = b_i$ using EigCG and $x_0'$ as initial guess and get $n_{ev}$ eigenvectors $V$.\\
+ \> \> Append and orthogonalize $V$ to $U$ and update $H$.\\
+ \>end for\\
+ \underline{init-CG phase}\\
+ \> for $i=k+1,\dots,N_r$\\
+ \> conv=false\\
+ \> \> while (conv=false) \\
+ \> \> \> $r_0=b_i - A x_0$ where $x_0$ is the initial guess for system $i$.\\
+ \> \> \> Deflate: $x_0' = x_0 + U H^{-1} (U^\dagger r_0).$\\
+ \> \> \> Solve $A x_i = b_i$ using CG and $x_0'$ as initial guess to $tol_{rest}$.\\
+ \> \> \> Restart: $x_0= x_i$ (the current solution).\\
+ \> \> \> If the system converged to $tol$, then conv=true.\\
+ \> \> end while\\
+ \> end for\\
+\end{tabbing}
+\end{minipage}
+}
+\end{center}
+\caption{The Incremental EigCG algorithm}
+\label{increigcg}
+\end{figure}
+
+
+\begin{thebibliography}{999}
+%\cite{Stathopoulos:2007zi}
+\bibitem{Stathopoulos:2007zi}
+  A.~Stathopoulos and K.~Orginos,
+  %``Computing and deflating eigenvalues while solving multiple right hand side linear systems in quantum chromodynamics,''
+  SIAM J.\ Sci.\ Comput.\  {\bf 32} (2010) 439
+  [arXiv:0707.0131 [hep-lat]].
+  %%CITATION = ARXIV:0707.0131;%%
+  %44 citations counted in INSPIRE as of 07 Aug 2014
+\end{thebibliography}
+
+
+
+
+\end{document}

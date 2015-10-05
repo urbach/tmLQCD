@@ -102,6 +102,7 @@ static inline void rmQuotes(char *str){
   float cs;
   int reread = 0;
   char name[100];
+  char fname[500];
   char * type;
 
   int verbose = 0;
@@ -576,19 +577,93 @@ static inline void rmQuotes(char *str){
   {SPC}*EigCGtolsq1{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
     (optr->solver_params).eigcg_tolsq1 = c;
-    if(myverbose) printf("  EigCGtolsq1 set to %lf line %d operator %d\n", a, line_of_file, current_operator);
+    if(myverbose) printf("  EigCGtolsq1 set to %lf line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*EigCGrestolsq{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     (optr->solver_params).eigcg_restolsq = c;
-    if(myverbose) printf("  EigCGrestolsq set to %lf line %d operator %d\n", a, line_of_file, current_operator);
+    if(myverbose) printf("  EigCGrestolsq set to %lf line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*EigCGRandGuessOpt{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     (optr->solver_params).eigcg_rand_guess_opt = a;
     if(myverbose) printf("  EigCGrand_guess_opt set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }
-
+  {SPC}*ARPACKCGnrhs{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).arpackcg_nrhs = a;
+    if(myverbose) printf("  arpackcg_nrhs set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*ARPACKCGnrhs1{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).arpackcg_nrhs1 = a;
+    if(myverbose) printf("  arpackcg_nrhs1 set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*ARPACKCGnev{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).arpackcg_nev = a;
+    if(myverbose) printf("  arpackcg_nev set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*ARPACKCGncv{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).arpackcg_ncv = a;
+    if(myverbose) printf("  arpackcg_ncv set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*ARPACKCGevalsKind{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).arpackcg_evals_kind = a;
+    if(myverbose) printf("  arpackcg_evals_kind set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*ARPACKCGeigmaxiter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).arpackcg_eig_maxiter = a;
+    if(myverbose) printf("  arpackcg_eig_maxiter set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*ARPACKCGtolsq1{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
+    (optr->solver_params).arpackcg_eps_sq1 = c;
+    if(myverbose) printf("  arpackcg_eps_sq1 set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  {SPC}*ARPACKCGrestolsq{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
+    (optr->solver_params).arpackcg_res_eps_sq = c;
+    if(myverbose) printf("  arpackcg_res_eps_sq set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  {SPC}*ARPACKCGeigtol{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
+    (optr->solver_params).arpackcg_eig_tol = c;
+    if(myverbose) printf("  arpackcg_eig_tol set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  {SPC}*ChebPolyDegree{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).cheb_k = a;
+    if(myverbose) printf("  cheb_k set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*ARPACKAccMode{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).use_acc = a;
+    if(myverbose) printf("  ARPACK polynomial acceleration mode set to  %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*ARPACKCompEvecs{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).arpackcg_comp_evecs = a;
+    if(myverbose) printf("  ARPACK compute evecs option set to   %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*ARPACKLogFile{EQL}{FILENAME}+ {
+    sscanf(yytext, " %[a-zA-Z] = %s", name, fname);
+    strncpy( (optr->solver_params).arpack_logfile, fname, 200) ;
+    if(myverbose) printf("  ARPACK logfile name is  set to %s line %d operator %d\n", fname, line_of_file, current_operator);
+  }
+  {SPC}*EVminHPD{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
+    (optr->solver_params).op_evmin = c;
+    if(myverbose) printf("  op_evmin set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  {SPC}*EVmaxHPD{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
+    (optr->solver_params).op_evmax = c;
+    if(myverbose) printf("  op_evmax set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+  }
   {SPC}*ExtraMasses{EQL}{FLTLIST} {
     char * token = NULL;
     optr->no_extra_masses = 0;
@@ -843,6 +918,26 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
+  arpackcg {
+    optr->solver = 16;
+    if(myverbose) printf("  Solver set to ARPACKCG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  arpackpolycg {
+    optr->solver = 17;
+    if(myverbose) printf("  Solver set to ARPACKPOLYCG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  polypreconcgher {
+    optr->solver = 18;
+    if(myverbose) printf("  Solver set to POLYPRECONCGHER line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  arpackpolycgshifts {
+    optr->solver = 19;
+    if(myverbose) printf("  Solver set to POLYPRECONCGSHIFTS line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
 
 }
 
@@ -851,6 +946,26 @@ static inline void rmQuotes(char *str){
   increigcg {
     optr->solver = 15;
     if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  arpackcg {
+    optr->solver = 16;
+    if(myverbose) printf("  Solver set to ARPACKCG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  arpackpolycg {
+    optr->solver = 17;
+    if(myverbose) printf("  Solver set to ARPACKPOLYCG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  polypreconcgher {
+    optr->solver = 18;
+    if(myverbose) printf("  Solver set to POLYPRECONCGHER line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  arpackpolycgshifts {
+    optr->solver = 19;
+    if(myverbose) printf("  Solver set to POLYPRECONCGSHIFTS line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
 

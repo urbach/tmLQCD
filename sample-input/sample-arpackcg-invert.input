@@ -1,0 +1,51 @@
+L=48
+T=96
+
+NrXProcs = 8
+NrYProcs = 8
+NrZProcs = 8
+
+OmpNumThreads = 1
+
+
+DebugLevel            = 5
+InitialStoreCounter   = 525
+Measurements          = 1
+2kappamu              = 0.000247122000
+kappa                 = 0.137290
+BCAngleT              = 1.
+GaugeConfigInputFile  = conf
+UseEvenOdd            = yes
+UseRelativePrecision  = yes
+SourceType            = Point
+#SourceType           = Volume
+Indices               = 0-11
+ReadSource            = no
+NoSamples             = 1
+DisableIOChecks       = no
+
+BeginOperator CLOVER
+  CSW                 = 1.57551
+  2kappaMu            = 0.000247122000
+  kappa               = 0.137290
+  Solver              = ARPACKCG
+  SolverPrecision     = 1.e-16    #this will be used for systems nrhs1+1,...,nrhs
+  ARPACKCGtolsq1      = 1.e-16    #squared tolerance to be used for the first nrhs1 linear systems
+  ARPACKCGrestolsq    = 5.e-9     #squared tolerance for restarting cg. if set to 0, no restart will take place.
+  MaxSolverIterations = 30000     #maximum number of iterations for solving the linear systems
+  ARPACKCGnrhs        = 12         #total number of systems to be solved
+  ARPACKCGnrhs1       = 4          #first nrhs1 systems will be solved to tolsq1 that can be different from SolverPrecision
+  ARPACKCGnev         = 100        #number of eigenvectors to be computed by arpack
+  ARPACKCGncv         = 200        #size of the subspace used by arpack nev+1 =< ncv 
+  ARPACKCGeigmaxiter  = 1000       #maximum number of iterations to be used by arpack
+  ARPACKCGeigtol      = 1.0e-5     #tolerance (not squared tolerance) for computing eigenvectors by arpack
+  ARPACKCGevalsKind   = 1          #type of eigenvalues to be computed by arpack: 0 smallest real part, 1 largest real part
+  ARPACKAccMode       = 1          #0 / 1 don't use/use polynomial acceleration
+  ARPACKCompEvecs     = 1          #compute eigenvalues and residuals of A (use fo debugging specially when using polynomial accelertion)
+  ARPACKLogFile       = arpack_log   #file name for the arpack log file
+  ChebPolyDegree      = 200          #degree of the Chebyshev polynomial used for acceleration
+  EVminHPD            = 4.e-4        #lower bound for the polynomial
+  EVmaxHPD            = 3.6          #upper bound for the polynomial
+  AddDownPropagator   = no
+EndOperator
+

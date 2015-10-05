@@ -1,0 +1,38 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{color}
+%opening
+\title{}
+\author{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+\end{abstract}
+
+\section{}
+
+\subsection{ARPACK eigensolver and ARPACK-CG linear solver}
+The Arnoldi Package (ARPACK) \cite{arpack-page} is a well known FORTRAN library for solving large scale eigenvalue problems. It can solve standard as well as generalized
+eigenvalue problems. An interface for using ARPACK inside tmLQCD is added under the solver subdirectory and is called {\tt eigenvalues\_arpack}. This interface was used
+for a new solver called {\tt arpack\_cg} in which we use eignvectors computed with ARPACK to deflate CG. The solver interface has some common features with eigCG. A sample
+input is also provided. A more detailed description is also given inside the corresponding header and source files. 
+
+In order to configure tmLQCD with ARPACK, it is needed that ARPACK and (P)ARPACK (the MPI parallel version) are installed. Assuming that these libraries are installed 
+in a directory {\tt arpack\_dir} under the names {\tt libarpack.a} and {\tt libparpack.a}, then in the simplest case one needs to add these libraries to {\tt LIBS} 
+and {\tt arpack\_dir} to {\tt LDFLAGS}. It might be needed to also add {\tt -lgfortran} to {\tt LIBS}. That should be sufficent to compile tmLQCD with arpack.
+
+
+
+\begin{thebibliography}{999}
+\bibitem{arpack-page}
+ http://www.caam.rice.edu/software/ARPACK/
+\end{thebibliography}
+
+
+
+
+\end{document}

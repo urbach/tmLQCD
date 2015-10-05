@@ -1,0 +1,50 @@
+L=16
+T=32
+
+NrXProcs = 1
+NrYProcs = 1
+NrZProcs = 1
+
+OmpNumThreads = 1
+
+
+DebugLevel            = 5
+InitialStoreCounter   = 200
+Measurements          = 1
+2kappamu              = 0.0024135
+kappa                 = 0.160900
+BCAngleT              = 1.
+GaugeConfigInputFile  = conf
+UseEvenOdd            = yes
+UseRelativePrecision  = yes
+SourceType           = Point
+#SourceType            = Volume
+Indices               = 0-1
+ReadSource            = no
+NoSamples             = 1
+DisableIOChecks       = yes
+
+
+
+
+BeginOperator TMWILSON
+  2kappaMu            = 0.0024135
+  kappa               = 0.160900
+  UseEvenOdd          = yes
+  Solver              = ARPACKPOLYCG
+  SolverPrecision     = 1.e-4    #this will be used for systems nrhs1+1,...,nrhs    
+  ARPACKCGtolsq1      = 1.e-6    #squared tolerance to be used for the first nrhs1 linear systems
+  ARPACKCGrestolsq    = 1.e-3    #squared tolerance for restarting cg. if set to 0, no restart will take place.
+  MaxSolverIterations = 2000     #maximum number of iterations for solving the linear systems
+  ARPACKCGnrhs        = 2        #total number of systems to be solved
+  ARPACKCGnrhs1       = 1        #first nrhs1 systems will be solved to tolsq1 that can be different from SolverPrecision
+  ARPACKCGnev         = 10       #number of eigenvectors to be computed by arpack
+  ARPACKCGncv         = 20       #size of the subspace used by arpack nev+1 =< ncv =< 2*nev
+  ARPACKCGeigmaxiter  = 1000     #maximum number of iterations to be used by arpack
+  ARPACKCGeigtol      = 1.e-3     #tolerance (not squared tolerance) for computing eigenvectors by arpack
+  ChebPolyDegree      = 10        #use a Chebyshev polynomial of degree 4 to precondition the system
+  EVminHPD            = 1e-4     #some estimate of the lowest eigenvalue of the Hermitian Positive Definite operator
+  EVmaxHPD            = 1.0      #some estimate of the highest eigenvalue of the Hermitian Positive Definite operator
+  AddDownPropagator   = no
+EndOperator
+

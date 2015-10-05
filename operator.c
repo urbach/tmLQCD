@@ -116,6 +116,37 @@ int add_operator(const int type) {
   optr->inverter = &op_invert;
   optr->write_prop = &op_write_prop;
 
+  //setting some default values for the solver_params struct
+  //eigcg
+  (optr->solver_params).eigcg_nrhs=0;          
+  (optr->solver_params).eigcg_nrhs1=0;          
+  (optr->solver_params).eigcg_nev=0;           
+  (optr->solver_params).eigcg_vmax=0;          
+  (optr->solver_params).eigcg_ldh=0;           
+  (optr->solver_params).eigcg_tolsq1=0.0;    
+  (optr->solver_params).eigcg_tolsq=0.0;     
+  (optr->solver_params).eigcg_restolsq=0.0;  
+  (optr->solver_params).eigcg_rand_guess_opt=0; 
+
+   //arpack based solvers
+   (optr->solver_params).arpackcg_nrhs=0;           
+   (optr->solver_params).arpackcg_nrhs1=0;         
+   (optr->solver_params).arpackcg_eps_sq1=0.0;      
+   (optr->solver_params).arpackcg_eps_sq=0.0;        
+   (optr->solver_params).arpackcg_res_eps_sq=0.0;    
+   (optr->solver_params).arpackcg_nev=0;           
+   (optr->solver_params).arpackcg_ncv=0;          
+   (optr->solver_params).arpackcg_evals_kind=0;          
+   (optr->solver_params).arpackcg_comp_evecs=0;          
+   strncpy((optr->solver_params).arpack_logfile,"default_arpack_log.dat",300);          
+   (optr->solver_params).arpackcg_eig_tol=0.0;       
+   (optr->solver_params).arpackcg_eig_maxiter=0;   
+   
+   //chebyshev polynomial related parameters
+   (optr->solver_params).cheb_k=0; 
+   (optr->solver_params).op_evmin=0.0;  
+   (optr->solver_params).op_evmax=0.0;  
+
   /* Overlap needs special treatment */
   if(optr->type == OVERLAP) {
     optr->even_odd_flag = 0;
