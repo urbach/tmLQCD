@@ -141,7 +141,10 @@ int add_operator(const int type) {
    strncpy((optr->solver_params).arpack_logfile,"default_arpack_log.dat",300);          
    (optr->solver_params).arpackcg_eig_tol=0.0;       
    (optr->solver_params).arpackcg_eig_maxiter=0;   
-   
+   (optr->solver_params).arpackcg_read_ev=0;
+   (optr->solver_params).arpackcg_write_ev=0;
+   strncpy((optr->solver_params).arpack_evecs_filename,"eigenvectors",300);
+
    //chebyshev polynomial related parameters
    (optr->solver_params).cheb_k=0; 
    (optr->solver_params).op_evmin=0.0;  

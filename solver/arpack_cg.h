@@ -66,7 +66,10 @@ int arpack_cg(
      int cheb_k,                    /*(IN) degree of the Chebyshev polynomial (irrelevant if acc=0)*/
      double emin,                      /*(IN) lower end of the interval where the acceleration will be used (irrelevant if acc=0)*/
      double emax,                      /*(IN) upper end of the interval where the acceleration will be used (irrelevant if acc=0)*/
-     char *arpack_logfile           /*(IN) file name to be used for printing out debugging information from arpack*/
+     char *arpack_logfile,           /*(IN) file name to be used for printing out debugging information from arpack*/
+     int  arpack_read_ev,          /*(IN) read eigenvectors in Schur basis from file */
+     int  arpack_write_ev,          /*(IN) write eigenvectors in Schur basis to file */
+     char *arpack_evecs_filename     /*(IN) file name to be used for reading and writing evecs from and to disc */
      );
 
 #endif 

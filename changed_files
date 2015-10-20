@@ -1,0 +1,6 @@
+./solver/arpack_cg.c
+./solver/arpack_cg.h
+./solver/solver_params.h
+./invert_clover_eo.c
+./invert_eo.c
+./read_input.l

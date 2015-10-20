@@ -40,6 +40,10 @@
 #include "start.h"
 #include "linalg/blas.h"
 #include "linalg/lapack.h"
+#include <io/eospinor.h>
+#include <io/params.h>
+#include <io/spinor.h>
+#include <io/utils.h>
 #include "solver_field.h"
 #include "solver/arpack_cg.h"
 
@@ -78,7 +82,10 @@ int arpack_cg(
      int cheb_k,                    /*(IN) degree of the Chebyshev polynomial (irrelevant if acc=0)*/
      double emin,                      /*(IN) lower end of the interval where the acceleration will be used (irrelevant if acc=0)*/
      double emax,                      /*(IN) upper end of the interval where the acceleration will be used (irrelevant if acc=0)*/
-     char *arpack_logfile           /*(IN) file name to be used for printing out debugging information from arpack*/
+     char *arpack_logfile,           /*(IN) file name to be used for printing out debugging information from arpack*/
+     int  arpack_read_ev,          /*(IN) read eigenvectors in Schur basis from file */
+     int  arpack_write_ev,          /*(IN) write eigenvectors in Schur basis to file */
+     char *arpack_evecs_filename     /*(IN) file name to be used for reading and writing evecs from and to disc */
      )
 { 
 
@@ -99,6 +106,12 @@ int arpack_cg(
   _Complex double c1,c2,tpone=1.0,tzero=0.0;
   double d1,d2,d3;
   double et1,et2;  //timing variables
+  char evecs_filename[500];
+  FILE *evecs_fs=NULL;
+  size_t evecs_count;
+  WRITER *evecs_writer=NULL;
+  spinor *evecs_ptr0 = NULL, *evecs_ptr1 = NULL;
+  paramsPropagatorFormat *evecs_propagatorFormat = NULL;
 
   int parallel;        /* for parallel processing of the scalar products */
   #ifdef MPI
@@ -186,23 +199,124 @@ int arpack_cg(
        exit(1);
     }
 
+    if ( arpack_read_ev == 1) {
+#if defined EVECS_FILEFORMAT_PARTFILE
+      /* set evec filenmae */
+      sprintf(evecs_filename, "%s.%.5d.%.pt%.2dpx%.2dpy%.2dpz%.2d", arpack_evecs_filename, nev, g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3]);
+      evecs_fs = fopen(evecs_filename, "r");
+      if (evecs_fs == NULL) {
+        fprintf(stderr, "[arpack_cg] (%.4d) Error, could not open file %s for reading\n", g_cart_id, evecs_filename);
+        return(-2);
+      }
+       
+      et1=gettime();
+      evecs_count = fread( evecs, sizeof(_Complex double), (size_t)nev*12*N, evecs_fs);
+      et2=gettime();
+       
+      if( evecs_count != ((size_t)nev*12*N) ) {
+        fprintf(stderr, "[arpack_cg] (%.4d) Error, could not proper amount of data from file %s\n", g_cart_id, evecs_filename);
+        return(-3);
+      }
+      fclose(evecs_fs);
+      evecs_fs = NULL;
+      if(g_proc_id == g_stdio_proc) {
+        fprintf(stdout,"ARPACK time for reading %d eigenvectors: %+e seconds\n",nconv, et2-et1);
+      }
+#elif defined EVECS_FILEFORMAT_SINGLE
 
-    et1=gettime();
-    evals_arpack(N,nev,ncv,kind,acc,cheb_k,emin,emax,evals,evecs,arpack_eig_tol,arpack_eig_maxiter,f,&info_arpack,&nconv,arpack_logfile);
-    et2=gettime();
+      if(N==VOLUME) {
+        for(i=0; i<nev; i++) {
+          sprintf(evecs_filename, "%s.ev%.5d", arpack_evecs_filename, i);
+          evecs_ptr0 = (spinor*)&(evecs[i*12*N]);
+          evecs_ptr1 = NULL;
+          read_spinor(evecs_ptr0,  evecs_ptr1, evecs_filename, 0);
+        } /* end of loop on eigenvectors */
+      } else if(N==VOLUME/2) {
+        for(i=0; i<nev/2; i++) {
+          sprintf(evecs_filename, "%s.ev%.5d", arpack_evecs_filename, 2*i);
+          evecs_ptr0 = (spinor*)&(evecs[(2*i  )*12*N]);
+          evecs_ptr1 = (spinor*)&(evecs[(2*i+1)*12*N]);
+          read_spinor(evecs_ptr0,  evecs_ptr1, evecs_filename, 0);
+        } /* end of loop on eigenvectors */
+      }
+#endif
+      /* set info_arpack pro forma to SUCCESS */
+      nconv = nev;
+      info_arpack = 0;
+    } else {
+      et1=gettime();
+      evals_arpack(N,nev,ncv,kind,acc,cheb_k,emin,emax,evals,evecs,arpack_eig_tol,arpack_eig_maxiter,f,&info_arpack,&nconv,arpack_logfile);
+      et2=gettime();
 
-
-    if(info_arpack != 0){ //arpack didn't converge
+      if(info_arpack != 0){ //arpack didn't converge
       if(g_proc_id == g_stdio_proc)
         fprintf(stderr,"WARNING: ARPACK didn't converge. exiting..\n");
-      return -1;
-    }
+        return -1;
+      }
     
-    if(g_proc_id == g_stdio_proc)
-    {
-       fprintf(stdout,"ARPACK has computed %d eigenvectors\n",nconv);
-       fprintf(stdout,"ARPACK time: %+e\n",et2-et1);
-    }
+      if(g_proc_id == g_stdio_proc)
+      {
+         fprintf(stdout,"ARPACK has computed %d eigenvectors\n",nconv);
+         fprintf(stdout,"ARPACK time: %+e\n",et2-et1);
+      }
+
+      if ( arpack_write_ev == 1) { 
+#if defined EVECS_FILEFORMAT_PARTFILE
+        /* set evec filenmae */
+        sprintf(evecs_filename, "%s.%.5d.%.pt%.2dpx%.2dpy%.2dpz%.2d", arpack_evecs_filename, nconv, g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3]);
+        evecs_fs = fopen(evecs_filename, "w");
+        if (evecs_fs == NULL) {
+          fprintf(stderr, "[arpack_cg] (%.4d) Error, could not open file %s for writing\n", g_cart_id, evecs_filename);
+          return(-4);
+        }
+ 
+        et1=gettime();
+        evecs_count = fwrite( evecs, sizeof(_Complex double), (size_t)nconv*12*N, evecs_fs);
+        et2=gettime();
+ 
+        if( evecs_count != ((size_t)nconv*12*N) ) {
+          fprintf(stderr, "[arpack_cg] (%.4d) Error, could not write proper amount of data to file %s\n", g_cart_id, evecs_filename);
+          return(-5);
+        }
+        fclose(evecs_fs);
+        evecs_fs = NULL;
+
+        if(g_proc_id == g_stdio_proc) {
+          fprintf(stdout,"[arpack_cg] (%.4d) ARPACK time for writing %d eigenvectors: %+e seconds\n", g_cart_id, nconv, et2-et1);
+        }
+#elif defined EVECS_FILEFORMAT_SINGLE
+
+        if(N==VOLUME) {
+          for(i=0; i<nconv; i++) {
+            sprintf(evecs_filename, "%s.ev%.5d", arpack_evecs_filename, i);
+            construct_writer(&evecs_writer, evecs_filename, 0);
+            evecs_propagatorFormat = construct_paramsPropagatorFormat(64, 1);
+            write_propagator_format(evecs_writer, evecs_propagatorFormat);
+            free(evecs_propagatorFormat);
+            evecs_ptr0 = (spinor*)&(evecs[i*12*N]);
+            evecs_ptr1 = NULL;
+            write_spinor(evecs_writer, &evecs_ptr0, &evecs_ptr1,1, 64);
+            destruct_writer(evecs_writer);
+            evecs_writer=NULL;
+          } /* end of loop on converged eigenvectors */
+        } else if(N==VOLUME/2) {
+          for(i=0; i<nconv/2; i++) {
+            sprintf(evecs_filename, "%s.ev%.5d", arpack_evecs_filename, 2*i);
+            construct_writer(&evecs_writer, evecs_filename, 0);
+            evecs_propagatorFormat = construct_paramsPropagatorFormat(64, 1);
+            write_propagator_format(evecs_writer, evecs_propagatorFormat);
+            free(evecs_propagatorFormat);
+            evecs_ptr0 = (spinor*)&(evecs[(2*i  )*12*N]);
+            evecs_ptr1 = (spinor*)&(evecs[(2*i+1)*12*N]);
+            write_spinor(evecs_writer, &evecs_ptr0, &evecs_ptr1,1, 64);
+            destruct_writer(evecs_writer);
+            evecs_writer=NULL;
+          } /* end of loop on converged eigenvectors */
+        }   /* end of if N == VOLUME */
+#endif
+      }  /* end of if arpack_write_ev == 1 */
+
+    }  /* end of if arpack_read_ev == 1 */
 
     H        = (_Complex double *) malloc(nconv*nconv*sizeof(_Complex double)); 
     HU       = (_Complex double *) malloc(nconv*nconv*sizeof(_Complex double)); 
@@ -221,6 +335,7 @@ int arpack_cg(
        exit(1);
     }
 
+    et1=gettime();
     //compute the elements of the hermitian matrix H 
     //leading dimension is nconv and active dimension is nconv
     for(i=0; i<nconv; i++)
@@ -237,7 +352,13 @@ int arpack_cg(
           H[i+nconv*j] = conj(c1); //enforce hermiticity
        }
      }
+    et2=gettime();
+    if(g_proc_id == g_stdio_proc) {
+      fprintf(stdout,"[arpack_cg] time to compute H: %+e\n",et2-et1);
+    }
 
+
+     et1=gettime();
      //compute Ritz values and Ritz vectors if needed
      if( (nconv>0) && (comp_evecs !=0))
      {
@@ -297,6 +418,13 @@ int arpack_cg(
 	    {fprintf(stdout,"Eval[%06d]: %22.15E rnorm: %22.15E\n", i, hevals[i], d3); fflush(stdout);}
         } 
      }//if( (nconv_arpack>0) && (comp_evecs !=0))
+     et2=gettime();
+     if(g_proc_id == g_stdio_proc) {
+       fprintf(stdout,"[arpack_cg] time to compute eigenvectors: %+e\n",et2-et1);
+     }
+
+
+
   } //if(ncurRHS==0)
     
   double eps_sq_used,restart_eps_sq_used;  //tolerance squared for the linear system

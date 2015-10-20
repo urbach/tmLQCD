@@ -83,7 +83,14 @@ typedef struct {
    double op_evmin;  /*lowest boundary of the interval for the polynomial acceleration*/
    double op_evmax;  /*highest boundary for the interval for the polynomial acceleration*/
    
-   
+  /*************************************
+   * parameters to control of I/O for
+   * eigenvectors
+   *************************************/
+   int arpackcg_write_ev;
+   int arpackcg_read_ev;
+   char arpack_evecs_filename[500];    /*file name for the evecs used by arpack*/
+
 } solver_params_t;
 
 
