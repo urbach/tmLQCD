@@ -202,7 +202,8 @@ int arpack_cg(
     if ( arpack_read_ev == 1) {
 #if defined EVECS_FILEFORMAT_PARTFILE
       /* set evec filenmae */
-      sprintf(evecs_filename, "%s.%.5d.%.pt%.2dpx%.2dpy%.2dpz%.2d", arpack_evecs_filename, nev, g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3]);
+      sprintf(evecs_filename, "%s.%.5d.pt%.2dpx%.2dpy%.2dpz%.2d", arpack_evecs_filename, nev, g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3]);
+
       evecs_fs = fopen(evecs_filename, "r");
       if (evecs_fs == NULL) {
         fprintf(stderr, "[arpack_cg] (%.4d) Error, could not open file %s for reading\n", g_cart_id, evecs_filename);
@@ -220,7 +221,7 @@ int arpack_cg(
       fclose(evecs_fs);
       evecs_fs = NULL;
       if(g_proc_id == g_stdio_proc) {
-        fprintf(stdout,"ARPACK time for reading %d eigenvectors: %+e seconds\n",nconv, et2-et1);
+        fprintf(stdout,"ARPACK time for reading %d eigenvectors: %+e seconds\n", nev, et2-et1);
       }
 #elif defined EVECS_FILEFORMAT_SINGLE
 
@@ -263,7 +264,8 @@ int arpack_cg(
       if ( arpack_write_ev == 1) { 
 #if defined EVECS_FILEFORMAT_PARTFILE
         /* set evec filenmae */
-        sprintf(evecs_filename, "%s.%.5d.%.pt%.2dpx%.2dpy%.2dpz%.2d", arpack_evecs_filename, nconv, g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3]);
+        sprintf(evecs_filename, "%s.%.5d.pt%.2dpx%.2dpy%.2dpz%.2d", arpack_evecs_filename, nconv, g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3]);
+
         evecs_fs = fopen(evecs_filename, "w");
         if (evecs_fs == NULL) {
           fprintf(stderr, "[arpack_cg] (%.4d) Error, could not open file %s for writing\n", g_cart_id, evecs_filename);
@@ -523,6 +525,72 @@ int arpack_cg(
     {
        tol_sq = restart_eps_sq_used;
     }
+
+#if 0
+    /* write the current x and b */
+/* #ifdef ARPACKCG_WRITE_DEFLATED_SOURCE */
+     if(N==VOLUME) {
+       /* write x */
+       sprintf(evecs_filename, "%s", "x_init");
+       construct_writer(&evecs_writer, evecs_filename, 0);
+       evecs_propagatorFormat = construct_paramsPropagatorFormat(64, 1);
+       write_propagator_format(evecs_writer, evecs_propagatorFormat);
+       free(evecs_propagatorFormat);
+       evecs_ptr0 = (spinor*)x;
+       evecs_ptr1 = NULL;
+       write_spinor(evecs_writer, &evecs_ptr0, &evecs_ptr1,1, 64);
+       destruct_writer(evecs_writer);
+       evecs_writer=NULL;
+ 
+       /* write b */
+       sprintf(evecs_filename, "%s", "b_init");
+       construct_writer(&evecs_writer, evecs_filename, 0);
+       evecs_propagatorFormat = construct_paramsPropagatorFormat(64, 1);
+       write_propagator_format(evecs_writer, evecs_propagatorFormat);
+       free(evecs_propagatorFormat);
+       evecs_ptr0 = (spinor*)b;
+       evecs_ptr1 = NULL;
+       write_spinor(evecs_writer, &evecs_ptr0, &evecs_ptr1,1, 64);
+       destruct_writer(evecs_writer);
+       evecs_writer=NULL;
+ 
+     } else if(N==VOLUME/2) {
+ 
+       sprintf(evecs_filename, "%s", "xb_init");
+       construct_writer(&evecs_writer, evecs_filename, 0);
+       evecs_propagatorFormat = construct_paramsPropagatorFormat(64, 1);
+       write_propagator_format(evecs_writer, evecs_propagatorFormat);
+       free(evecs_propagatorFormat);
+       evecs_ptr0 = (spinor*)x;
+       evecs_ptr1 = (spinor*)b;
+       write_spinor(evecs_writer, &evecs_ptr0, &evecs_ptr1,1, 64);
+       destruct_writer(evecs_writer);
+       evecs_writer=NULL;
+ 
+     }  /* end of if N == VOLUME / 2 */
+/*#elif defined ARPACKCG_READ_DEFLATED_SOURCE*/
+     if(N==VOLUME) {
+       sprintf(evecs_filename, "%s", "x_init");
+       evecs_ptr0 = (spinor*)x;
+       evecs_ptr1 = NULL;
+       read_spinor(evecs_ptr0,  evecs_ptr1, evecs_filename, 0);
+ 
+       sprintf(evecs_filename, "%s", "b_init");
+       evecs_ptr0 = (spinor*)b;
+       evecs_ptr1 = NULL;
+       read_spinor(evecs_ptr0,  evecs_ptr1, evecs_filename, 0);
+ 
+     } else if(N==VOLUME/2) {
+       sprintf(evecs_filename, "%s", "xb_init");
+       evecs_ptr0 = (spinor*)x;
+       evecs_ptr1 = (spinor*)b;
+       read_spinor(evecs_ptr0,  evecs_ptr1, evecs_filename, 0);
+     }
+/*#endif*/
+#endif
+
+
+
 
     wt1 = gettime();
     its = cg_her(x,b,maxit_remain,tol_sq,rel_prec,N,f); 
