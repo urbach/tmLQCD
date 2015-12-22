@@ -1,0 +1,11 @@
+git remote set-url origin ssh://git@github.com:marcuspetschlies/tmLQCD.git
+
+hbn289@juqueen1:~/tmLQCD/tmLQCD $ git push
+ssh: Could not resolve hostname github.com:marcuspetschlies: Name or service not known
+fatal: The remote end hung up unexpectedly
+
+
+hbn289@juqueen1:~/tmLQCD/tmLQCD $ ssh -T git@github.com
+Warning: Permanently added the RSA host key for IP address '192.30.252.131' to the list of known hosts.
+Hi marcuspetschlies! You've successfully authenticated, but GitHub does not provide shell access.
+
