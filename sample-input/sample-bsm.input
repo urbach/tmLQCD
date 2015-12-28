@@ -47,6 +47,8 @@ BeginOperator BSM
   Solver = CG
   SolverPrecision = 1e-14
   MaxSolverIterations = 1000
+  # specify how many scalar fields will be used for each gauge configuration
+  npergauge = 1
 EndOperator
 
 

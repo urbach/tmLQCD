@@ -106,6 +106,9 @@ int add_operator(const int type) {
   optr->conf_input = _default_gauge_input_filename;
   optr->no_extra_masses = 0;
 
+  optr->npergauge = 1;
+  optr->n = 0;
+
   optr->applyM = &dummy_D;
   optr->applyQ = &dummy_D;
   optr->applyQp = &dummy_D;
@@ -541,7 +544,12 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
     }
   }
   else {
-    sprintf(filename, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
+    /* for the BSM operator, can have multiple scalar fields per sample */
+    if(optr->type==BSM){
+      snprintf(filename, 100, "%s.%.4d.%.5d.%.3d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, optr->n, ending);
+    } else {
+      snprintf(filename, 100, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
+    }
   }
 
   if(!PropInfo.splitted || append_)

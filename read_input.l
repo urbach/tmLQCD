@@ -700,6 +700,11 @@ inline void rmQuotes(char *str){
     m0_BSM = c;
     if(myverbose != 0) printf("  BSM parameter m0 set to %f\n", m0_BSM);
   }
+  {SPC}*npergauge{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    optr->npergauge = a;
+    if(myverbose) printf("  npergauge set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
 }
 
 <WILSONOP,TMOP>{
