@@ -323,35 +323,6 @@ int main(int argc, char *argv[])
       }
     }
 
-    // the scalar field is generated / read below
-//    if(have_bsm_op) {
-//      // read scalar field
-//      if( strcmp(scalar_input_filename, "create_random_scalarfield") == 0 ) {
-//	for( int s = 0; s < 4; s++)
-//	  ranlxd(g_scalar_field[s], VOLUME);
-//      }
-//      else {
-//	sprintf(scalar_filename, "%s.%d", scalar_input_filename, nscalar);
-//	if (g_cart_id == 0) {
-//	  printf("#\n# Trying to read scalar field from file %s in %s precision.\n",
-//		 scalar_filename, (scalar_precision_read_flag == 32 ? "single" : "double"));
-//	  fflush(stdout);
-//	}
-//	
-//	int i;
-//	if( (i = read_scalar_field(scalar_filename,g_scalar_field)) !=0) {
-//	  fprintf(stderr, "Error %d while reading scalar field from %s\n Aborting...\n", i, scalar_filename);
-//	  exit(-2);
-//	}
-//	
-//	if (g_cart_id == 0) {
-//	  printf("# Finished reading scalar field.\n");
-//	  fflush(stdout);
-//	}
-//      }
-//    }
-
-
     if (reweighting_flag == 1) {
       reweighting_factor(reweighting_samples, nstore);
     }
