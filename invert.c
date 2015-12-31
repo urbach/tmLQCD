@@ -454,7 +454,9 @@ int main(int argc, char *argv[])
           fitPrecParams(op_id);
         }
       }
-      
+     
+      /* set scalar field counter to InitialScalarCounter */
+      int iscalar = nscalar; 
       /* support multiple inversions for the BSM operator, one for each scalar field */
       for(int i_pergauge = 0; i_pergauge < operator_list[op_id].npergauge; ++i_pergauge){
         // generate or read the scalar field for the BSM operator
@@ -465,8 +467,8 @@ int main(int argc, char *argv[])
           if( strcmp(scalar_input_filename, "create_random_scalarfield") == 0 ) {
             for( int s = 0; s < 4; s++) { ranlxd(g_scalar_field[s], VOLUME); }
           } else {
-            snprintf(scalar_filename, 50, "%s.%d", scalar_input_filename, nscalar);
-            ++nscalar;
+            snprintf(scalar_filename, 50, "%s.%d", scalar_input_filename, iscalar);
+            ++iscalar;
     	      if (g_cart_id == 0) {
     	        printf("#\n# Trying to read scalar field from file %s in %s precision.\n",
     		             scalar_filename, (scalar_precision_read_flag == 32 ? "single" : "double"));
