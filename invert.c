@@ -476,13 +476,15 @@ int main(int argc, char *argv[])
     	      }
     	
             int i;
+            double read_end, read_begin=gettime();
             if( (i = read_scalar_field(scalar_filename,g_scalar_field)) !=0) {
               fprintf(stderr, "Error %d while reading scalar field from %s\n Aborting...\n", i, scalar_filename);
               exit(-2);
             }
+            read_end=gettime();
             
             if (g_cart_id == 0) {
-              printf("# Finished reading scalar field.\n");
+              printf("# Finished reading scalar field in %.4e seconds.\n",read_end-read_begin);
               fflush(stdout);
             }
           }
