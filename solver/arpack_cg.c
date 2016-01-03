@@ -137,7 +137,7 @@ int arpack_cg(
     if(_ax==NULL)
     {
        if(g_proc_id == g_stdio_proc)
-          fprintf(stderr,"insufficient memory for _ax inside arpack_cg.\n");
+          fprintf(stderr,"[arpack_cg] insufficient memory for _ax inside arpack_cg.\n");
        exit(1);
     }
     else
@@ -147,7 +147,7 @@ int arpack_cg(
     if(_r==NULL)
     {
        if(g_proc_id == g_stdio_proc)
-          fprintf(stderr,"insufficient memory for _r inside arpack_cg.\n");
+          fprintf(stderr,"[arpack_cg] insufficient memory for _r inside arpack_cg.\n");
        exit(1);
     }
     else
@@ -157,7 +157,7 @@ int arpack_cg(
     if(_tmps1==NULL)
     {
        if(g_proc_id == g_stdio_proc)
-          fprintf(stderr,"insufficient memory for _tmps1 inside arpack_cg.\n");
+          fprintf(stderr,"[arpack_cg] insufficient memory for _tmps1 inside arpack_cg.\n");
        exit(1);
     }
     else
@@ -167,7 +167,7 @@ int arpack_cg(
     if(_tmps2==NULL)
     {
        if(g_proc_id == g_stdio_proc)
-          fprintf(stderr,"insufficient memory for _tmps2 inside arpack_cg.\n");
+          fprintf(stderr,"[arpack_cg] insufficient memory for _tmps2 inside arpack_cg.\n");
        exit(1);
     }
     else
@@ -182,7 +182,7 @@ int arpack_cg(
     if( (ax == NULL)  || (r==NULL) || (tmps1==NULL) || (tmps2==NULL) )
     {
        if(g_proc_id == g_stdio_proc)
-          fprintf(stderr,"insufficient memory for ax,r,tmps1,tmps2 inside arpack_cg.\n");
+          fprintf(stderr,"[arpack_cg] insufficient memory for ax,r,tmps1,tmps2 inside arpack_cg.\n");
        exit(1);
     }
     #endif
@@ -195,7 +195,7 @@ int arpack_cg(
     if((evecs == NULL)  || (evals==NULL) || (tmpv1==NULL))
     {
        if(g_proc_id == g_stdio_proc)
-          fprintf(stderr,"insufficient memory for evecs and evals inside arpack_cg.\n");
+          fprintf(stderr,"[arpack_cg] insufficient memory for evecs and evals inside arpack_cg.\n");
        exit(1);
     }
 
@@ -203,13 +203,13 @@ int arpack_cg(
 #if defined EVECS_FILEFORMAT_PARTFILE
       /* set evec filenmae */
       sprintf(evecs_filename, "%s.%.5d.pt%.2dpx%.2dpy%.2dpz%.2d", arpack_evecs_filename, nev, g_proc_coords[0], g_proc_coords[1], g_proc_coords[2], g_proc_coords[3]);
-
       evecs_fs = fopen(evecs_filename, "r");
       if (evecs_fs == NULL) {
         fprintf(stderr, "[arpack_cg] (%.4d) Error, could not open file %s for reading\n", g_cart_id, evecs_filename);
         return(-2);
       }
-       
+      if(g_cart_id == 0) fprintf(stdout, "# [arpack_cg] reading eigenvectors from file %s\n", evecs_filename);
+
       et1=gettime();
       evecs_count = fread( evecs, sizeof(_Complex double), (size_t)nev*12*N, evecs_fs);
       et2=gettime();
@@ -221,7 +221,7 @@ int arpack_cg(
       fclose(evecs_fs);
       evecs_fs = NULL;
       if(g_proc_id == g_stdio_proc) {
-        fprintf(stdout,"ARPACK time for reading %d eigenvectors: %+e seconds\n", nev, et2-et1);
+        fprintf(stdout,"# [arpack_cg] ARPACK time for reading %d eigenvectors: %+e seconds\n", nev, et2-et1);
       }
 #elif defined EVECS_FILEFORMAT_SINGLE
 
@@ -251,14 +251,14 @@ int arpack_cg(
 
       if(info_arpack != 0){ //arpack didn't converge
       if(g_proc_id == g_stdio_proc)
-        fprintf(stderr,"WARNING: ARPACK didn't converge. exiting..\n");
+        fprintf(stderr,"[arpack_cg] WARNING: ARPACK didn't converge. exiting..\n");
         return -1;
       }
     
       if(g_proc_id == g_stdio_proc)
       {
-         fprintf(stdout,"ARPACK has computed %d eigenvectors\n",nconv);
-         fprintf(stdout,"ARPACK time: %+e\n",et2-et1);
+         fprintf(stdout,"# [arpack_cg] ARPACK has computed %d eigenvectors\n",nconv);
+         fprintf(stdout,"# [arpack_cg] ARPACK time: %+e\n",et2-et1);
       }
 
       if ( arpack_write_ev == 1) { 
@@ -333,7 +333,7 @@ int arpack_cg(
     if((H==NULL) || (HU==NULL) || (Hinv==NULL) || (initwork==NULL) || (IPIV==NULL) || (zheev_lwork==NULL) || (zheev_rwork==NULL) || (hevals==NULL))
     {
        if(g_proc_id == g_stdio_proc)
-          fprintf(stderr,"insufficient memory for H, HU, Hinv, initwork, IPIV, zheev_lwork, zheev_rwork, hevals inside arpack_cg.\n");
+          fprintf(stderr,"[arpack_cg] insufficient memory for H, HU, Hinv, initwork, IPIV, zheev_lwork, zheev_rwork, hevals inside arpack_cg.\n");
        exit(1);
     }
 
@@ -376,7 +376,7 @@ int arpack_cg(
          {
 	    if(g_proc_id == g_stdio_proc) 
 	    {
-	        fprintf(stderr,"Error in ZHEEV:, info =  %d\n",zheev_info); 
+	        fprintf(stderr,"[arpack_cg] Error in ZHEEV:, info =  %d\n",zheev_info); 
                 fflush(stderr);
 	    }
 	    exit(1);
@@ -392,8 +392,8 @@ int arpack_cg(
          /* compute residuals and print out results */
 
 	 if(g_proc_id == g_stdio_proc)
-	 {fprintf(stdout,"Ritz values of A and their residulas (||A*x-lambda*x||/||x||\n"); 
-          fprintf(stdout,"=============================================================\n");
+	 {fprintf(stdout,"# [arpack_cg] Ritz values of A and their residulas (||A*x-lambda*x||/||x||\n"); 
+          fprintf(stdout,"# [arpack_cg] =============================================================\n");
           fflush(stdout);}
 
          for(i=0; i<nconv; i++)
@@ -445,7 +445,7 @@ int arpack_cg(
   }
   
   if(g_proc_id == g_stdio_proc && g_debug_level > 0) {
-    fprintf(stdout, "System %d, eps_sq %e\n",ncurRHS,eps_sq_used); 
+    fprintf(stdout, "# [arpack_cg] System %d, eps_sq %e\n",ncurRHS,eps_sq_used); 
     fflush(stdout);
   } 
   
@@ -494,7 +494,7 @@ int arpack_cg(
       if(info_lapack != 0)
       {
          if(g_proc_id == g_stdio_proc) {
-            fprintf(stderr, "Error in ZGESV:, info =  %d\n",info_lapack); 
+            fprintf(stderr, "[arpack_cg] Error in ZGESV:, info =  %d\n",info_lapack); 
             fflush(stderr);
          }
          exit(1);
@@ -604,7 +604,7 @@ int arpack_cg(
     {
        //cg didn't converge
        if(g_proc_id == g_stdio_proc) {
-         fprintf(stderr, "CG didn't converge within the maximum number of iterations in arpack_cg. Exiting...\n"); 
+         fprintf(stderr, "[arpack_cg] CG didn't converge within the maximum number of iterations in arpack_cg. Exiting...\n"); 
          fflush(stderr);
          exit(1);
          
@@ -629,11 +629,11 @@ int arpack_cg(
   normsq=square_norm(r,N,parallel);
   if(g_debug_level > 0 && g_proc_id == g_stdio_proc)
   {
-    fprintf(stdout, "For this rhs:\n");
-    fprintf(stdout, "Total initCG Wallclock : %+e\n", wI);
-    fprintf(stdout, "Total cg Wallclock : %+e\n", wE);
-    fprintf(stdout, "Iterations: %-d\n", numIts); 
-    fprintf(stdout, "Actual Resid of LinSys  : %+e\n",normsq);
+    fprintf(stdout, "# [arpack_cg] For this rhs:\n");
+    fprintf(stdout, "# [arpack_cg] Total initCG Wallclock : %+e\n", wI);
+    fprintf(stdout, "# [arpack_cg] Total cg Wallclock : %+e\n", wE);
+    fprintf(stdout, "# [arpack_cg] Iterations: %-d\n", numIts); 
+    fprintf(stdout, "# [arpack_cg] Actual Resid of LinSys  : %+e\n",normsq);
   }
 
 

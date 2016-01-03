@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
       printf("# measurement id %d, type = %d\n", j, measurement_list[j].type);
     }
   }
-  init_measurements();  
+  init_measurements();
 
   /* this could be maybe moved to init_operators */
 #ifdef _USE_HALFSPINOR

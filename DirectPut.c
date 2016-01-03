@@ -457,14 +457,14 @@ void global_barrier() {
   uint64_t timeoutCycles = 600UL * 1600000000UL; // about 600 sec at 1.6 ghz
   rc = MUSPI_GIBarrierEnter ( &GIBarrier );
   if (rc) {
-    printf("MUSPI_GIBarrierEnter failed returned rc = %d\n", rc);
+    printf("MUSPI_GIBarrierEnter failed returned rc = %d in %d / %s\n", rc, __LINE__, __FILE__);
     fatal_error("MUSPI_GIBarrierEnter failed","global_barrier");
   }
   
   // Poll for completion of the barrier.
   rc = MUSPI_GIBarrierPollWithTimeout ( &GIBarrier, timeoutCycles);
   if( rc ) {
-    printf("MUSPI_GIBarrierPollWithTimeout failed returned rc = %d\n", rc);
+    printf("MUSPI_GIBarrierPollWithTimeout failed returned rc = %d in %d / %s\n", rc, __LINE__, __FILE__);
     DelayTimeBase (200000000000UL);
     fatal_error("MUSPI_GIBarriePollWithTimeout failed","global_barrier");
   }
