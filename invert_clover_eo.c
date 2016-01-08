@@ -101,14 +101,15 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
 
     }else if(solver_flag == ARPACKCG){
 
-       if(g_proc_id == 0) {printf("# Using ARPACK-CG!\n"); fflush(stdout);}
+       if(g_proc_id == 0) {printf("# [invert_clover_eo] Using ARPACK-CG!\n"); fflush(stdout);}
 
        iter = arpack_cg(VOLUME/2,solver_params.arpackcg_nrhs,solver_params.arpackcg_nrhs1, Odd_new, g_spinor_field[DUM_DERI],Qsq,
                         solver_params.arpackcg_eps_sq1,precision,solver_params.arpackcg_res_eps_sq,rel_prec,max_iter,
                         solver_params.arpackcg_nev,solver_params.arpackcg_ncv,solver_params.arpackcg_eig_tol,solver_params.arpackcg_eig_maxiter,
                         solver_params.arpackcg_evals_kind,solver_params.arpackcg_comp_evecs,solver_params.use_acc,
                         solver_params.cheb_k,solver_params.op_evmin,solver_params.op_evmax,solver_params.arpack_logfile,
-                        solver_params.arpackcg_read_ev, solver_params.arpackcg_write_ev,solver_params.arpack_evecs_filename);
+                        solver_params.arpackcg_read_ev, solver_params.arpackcg_write_ev,solver_params.arpack_evecs_filename,
+                        solver_params.arpackcg_projection_type, &Qsw_plus_psi, &Qsw_minus_psi);
 
        Qm(Odd_new, Odd_new);
     }

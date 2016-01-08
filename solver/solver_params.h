@@ -91,6 +91,8 @@ typedef struct {
    int arpackcg_read_ev;
    char arpack_evecs_filename[500];    /*file name for the evecs used by arpack*/
 
+   int arpackcg_projection_type;
+
 } solver_params_t;
 
 

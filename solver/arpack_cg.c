@@ -80,12 +80,15 @@ int arpack_cg(
      int acc,                       /*(IN) 0 no polynomial acceleration
                                            1 use polynomial acceleration*/
      int cheb_k,                    /*(IN) degree of the Chebyshev polynomial (irrelevant if acc=0)*/
-     double emin,                      /*(IN) lower end of the interval where the acceleration will be used (irrelevant if acc=0)*/
-     double emax,                      /*(IN) upper end of the interval where the acceleration will be used (irrelevant if acc=0)*/
-     char *arpack_logfile,           /*(IN) file name to be used for printing out debugging information from arpack*/
-     int  arpack_read_ev,          /*(IN) read eigenvectors in Schur basis from file */
+     double emin,                   /*(IN) lower end of the interval where the acceleration will be used (irrelevant if acc=0)*/
+     double emax,                   /*(IN) upper end of the interval where the acceleration will be used (irrelevant if acc=0)*/
+     char *arpack_logfile,          /*(IN) file name to be used for printing out debugging information from arpack*/
+     int  arpack_read_ev,           /*(IN) read eigenvectors in Schur basis from file */
      int  arpack_write_ev,          /*(IN) write eigenvectors in Schur basis to file */
-     char *arpack_evecs_filename     /*(IN) file name to be used for reading and writing evecs from and to disc */
+     char *arpack_evecs_filename,   /*(IN) file name to be used for reading and writing evecs from and to disc */
+     int projection_type,           /* how to project with approximate eigenvectors */
+     matrix_mult f_final,           /* final operator application during projection of type 1 */
+     matrix_mult f_initial          /* initial operator application during projection of type 1 */
      )
 { 
 
@@ -208,7 +211,7 @@ int arpack_cg(
         fprintf(stderr, "[arpack_cg] (%.4d) Error, could not open file %s for reading\n", g_cart_id, evecs_filename);
         return(-2);
       }
-      if(g_cart_id == 0) fprintf(stdout, "# [arpack_cg] reading eigenvectors from file %s\n", evecs_filename);
+      fprintf(stdout, "# [arpack_cg] reading eigenvectors from file %s\n", evecs_filename);
 
       et1=gettime();
       evecs_count = fread( evecs, sizeof(_Complex double), (size_t)nev*12*N, evecs_fs);
@@ -359,6 +362,16 @@ int arpack_cg(
       fprintf(stdout,"[arpack_cg] time to compute H: %+e\n",et2-et1);
     }
 
+/*
+    if(g_cart_id == 0) {
+      for(i=0; i<nconv; i++) {
+      for(j=0; j<nconv; j++) {
+        fprintf(stdout, "H[%d, %d] = %25.16e %25.16e\n", i, j, creal(H[i*nconv+j]), cimag(H[i*nconv+j]));
+      }}
+    }
+*/
+
+
 
      et1=gettime();
      //compute Ritz values and Ritz vectors if needed
@@ -445,7 +458,7 @@ int arpack_cg(
   }
   
   if(g_proc_id == g_stdio_proc && g_debug_level > 0) {
-    fprintf(stdout, "# [arpack_cg] System %d, eps_sq %e\n",ncurRHS,eps_sq_used); 
+    fprintf(stdout, "# [arpack_cg] System %d, eps_sq %e, projection type %d\n",ncurRHS,eps_sq_used, projection_type); 
     fflush(stdout);
   } 
   
@@ -468,6 +481,47 @@ int arpack_cg(
     
     if(nconv > 0)
     {
+
+#if 0
+      /* TEST */
+     if( projection_type == 1 ) { 
+
+        for(i=0; i<nconv; i++) {
+          assign_complex_to_spinor(tmps1,&evecs[i*12*N],12*N);
+          f_final(r, tmps1);
+          f(ax,r);
+        for(j=0; j<nconv; j++) {
+          assign_complex_to_spinor(tmps1,&evecs[j*12*N],12*N);
+          f_final(r, tmps1);
+          c1 = scalar_prod(r,ax,N,parallel);
+            HU[j+nconv*i] = c1;
+          }
+        }
+
+
+        for(i=0; i<nconv; i++) {
+          assign_complex_to_spinor(r,&evecs[i*12*N],12*N);
+          f_final(tmps1, r);
+        for(j=0; j<nconv; j++) {
+          assign_complex_to_spinor(r,&evecs[j*12*N],12*N);
+          f_final(tmps2, r);
+          c1 = scalar_prod(tmps2, tmps1, N, parallel);
+            HU[j+nconv*i] = c1;
+          }
+        }
+
+        if(g_cart_id == 0) {
+          for(i=0; i<nconv; i++) {
+          for(j=0; j<nconv; j++) {
+            fprintf(stdout, "HU[%d, %d] = %25.16e %25.16e\n", i, j, creal(HU[i*nconv+j]), cimag(HU[i*nconv+j]));
+          }}
+        }
+
+      } 
+      /* END OF TEST */
+#endif
+
+
       /* --------------------------------------------------------- */
       /* Perform init-CG with evecs vectors                        */
       /* xinit = xinit + evecs*Hinv*evec'*(b-Ax0) 		   */
@@ -478,33 +532,61 @@ int arpack_cg(
       f(ax,x); /*ax = A*x */
       diff(r,b,ax,N);  /* r=b-A*x */
 
-      /* x = x + evecs*inv(H)*evecs'*r */
-      for(int i=0; i < nconv; i++)
-      {
-         assign_complex_to_spinor(tmps1,&evecs[i*12*N],12*N);
-         initwork[i]= scalar_prod(tmps1,r,N,parallel);
-      }
+      if( projection_type == 0) {
 
-      /* solve the linear system H y = c */
-      tmpsize=nconv*nconv;
-      _FT(zcopy) (&tmpsize,H,&ONE,Hinv,&ONE); /* copy H into Hinv */
-      //SUBROUTINE ZGESV( N, NRHS, A, LDA, IPIV, B, LDB, INFO )
-      _FT(zgesv) (&nconv,&ONE,Hinv,&nconv,IPIV,initwork,&nconv,&info_lapack);
+        /* x = x + evecs*inv(H)*evecs'*r */
+        for(int i=0; i < nconv; i++)
+        {
+           assign_complex_to_spinor(tmps1,&evecs[i*12*N],12*N);
+           initwork[i]= scalar_prod(tmps1,r,N,parallel);
+        }
 
-      if(info_lapack != 0)
-      {
-         if(g_proc_id == g_stdio_proc) {
-            fprintf(stderr, "[arpack_cg] Error in ZGESV:, info =  %d\n",info_lapack); 
-            fflush(stderr);
-         }
-         exit(1);
-      }
+        /* solve the linear system H y = c */
+        tmpsize=nconv*nconv;
+        _FT(zcopy) (&tmpsize,H,&ONE,Hinv,&ONE); /* copy H into Hinv */
+        //SUBROUTINE ZGESV( N, NRHS, A, LDA, IPIV, B, LDB, INFO )
+        _FT(zgesv) (&nconv,&ONE,Hinv,&nconv,IPIV,initwork,&nconv,&info_lapack);
 
-      /* x = x + evecs*inv(H)*evecs'*r */
-      for(i=0; i<nconv; i++)
-      {
-        assign_complex_to_spinor(tmps1,&evecs[i*12*N],12*N);
-        assign_add_mul(x,tmps1,initwork[i],N);
+        if(info_lapack != 0)
+        {
+           if(g_proc_id == g_stdio_proc) {
+              fprintf(stderr, "[arpack_cg] Error in ZGESV:, info =  %d\n",info_lapack); 
+              fflush(stderr);
+           }
+           exit(1);
+        }
+
+        /* x = x + evecs*inv(H)*evecs'*r */
+        for(i=0; i<nconv; i++)
+        {
+          assign_complex_to_spinor(tmps1,&evecs[i*12*N],12*N);
+          assign_add_mul(x,tmps1,initwork[i],N);
+        }
+
+      } else if ( projection_type == 1 ) {
+        /* x = x + evecs*inv(H)*evecs'*r */
+
+        /* tmps2 = Q^+ r */
+        f_initial(tmps2, r);
+
+        for(int i=0; i < nconv; i++) {
+          /* tmps1 = v_i */
+          assign_complex_to_spinor(tmps1,&evecs[i*12*N],12*N);
+
+          /* initwork_i = v_i^+ Q^+ r / lambda_i^2 */
+          initwork[i]= scalar_prod(tmps1, tmps2, N, parallel) / ( H[i*nconv+i] * H[i*nconv+i] );
+        }
+
+        memset(tmps2, 0, N*sizeof(spinor) );
+        for(i=0; i<nconv; i++) {
+          assign_complex_to_spinor(tmps1, &evecs[i*12*N], 12*N);
+          assign_add_mul(tmps2, tmps1, initwork[i], N);
+        }
+
+        /* apply final operator */
+        f_final(tmps1, tmps2);
+        assign_add_mul(x, tmps1, 1., N);
+
       }
 
       /* compute elapsed time and add to accumulator */

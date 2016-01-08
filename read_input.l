@@ -674,6 +674,11 @@ static inline void rmQuotes(char *str){
     (optr->solver_params).arpackcg_write_ev = a;
     if(myverbose) printf("  arpackcg_write_ev set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }
+  {SPC}*ARPACKCGProjectionType{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).arpackcg_projection_type = a;
+    if(myverbose) printf("  arpackcg_projection_type set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
   {SPC}*ARPACKEvecsFile{EQL}{FILENAME}+ {
     sscanf(yytext, " %[a-zA-Z] = %s", name, fname);
     strncpy( (optr->solver_params).arpack_evecs_filename, fname, 200) ;

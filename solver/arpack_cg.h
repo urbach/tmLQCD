@@ -69,7 +69,10 @@ int arpack_cg(
      char *arpack_logfile,           /*(IN) file name to be used for printing out debugging information from arpack*/
      int  arpack_read_ev,          /*(IN) read eigenvectors in Schur basis from file */
      int  arpack_write_ev,          /*(IN) write eigenvectors in Schur basis to file */
-     char *arpack_evecs_filename     /*(IN) file name to be used for reading and writing evecs from and to disc */
+     char *arpack_evecs_filename,     /*(IN) file name to be used for reading and writing evecs from and to disc */
+     int projection_type,           /* how to project with approximate eigenvectors */
+     matrix_mult f_final,           /* final operator application during projection of type 1 */
+     matrix_mult f_initial          /* initial operator application during projection of type 1 */
      );
 
 #endif 
