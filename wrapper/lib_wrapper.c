@@ -183,17 +183,24 @@ int tmLQCD_read_gauge(const int nconfig) {
     return(-1);
   }
 
-  sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nconfig);
-  int j=0;
-  if (g_cart_id == 0) {
-    printf("#\n# Trying to read gauge field from file %s.\n",
-	   conf_filename);
-    fflush(stdout);
+  if(strcmp(gauge_input_filename, "identity") == 0) {
+    if(g_cart_id == 0) fprintf(stdout, "# [invert] initializing unit gauge field\n");
+    unit_g_gauge_field();
+  } else {
+
+    sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nconfig);
+    int j=0;
+    if (g_cart_id == 0) {
+      printf("#\n# Trying to read gauge field from file %s.\n",
+  	   conf_filename);
+      fflush(stdout);
+    }
+    if( (j = read_gauge_field(conf_filename,g_gauge_field)) !=0) {
+      fprintf(stderr, "tmLQCD_read_gauge: Error %d while reading gauge field from %s\n ...\n", j, conf_filename);
+      return(-1);
+    }
   }
-  if( (j = read_gauge_field(conf_filename,g_gauge_field)) !=0) {
-    fprintf(stderr, "tmLQCD_read_gauge: Error %d while reading gauge field from %s\n ...\n", j, conf_filename);
-    return(-1);
-  }
+
   if (g_cart_id == 0) {
     printf("# Finished reading gauge field.\n");
     fflush(stdout);

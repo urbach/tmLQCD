@@ -106,7 +106,7 @@ int arpack_cg(
   char cV='V',cN='N', cU='U';   
   int ONE=1;
   int zheev_lwork,zheev_info;
-  _Complex double c1,c2,tpone=1.0,tzero=0.0;
+  _Complex double c1, c2, c3, tpone=1.0,tzero=0.0;
   double d1,d2,d3;
   double et1,et2;  //timing variables
   char evecs_filename[500];
@@ -343,20 +343,48 @@ int arpack_cg(
     et1=gettime();
     //compute the elements of the hermitian matrix H 
     //leading dimension is nconv and active dimension is nconv
-    for(i=0; i<nconv; i++)
-    {
-       assign_complex_to_spinor(r,&evecs[i*12*N],12*N);
-       f(ax,r);
-       c1 = scalar_prod(r,ax,N,parallel);
-       H[i+nconv*i] = creal(c1);  //diagonal should be real
-       for(j=i+1; j<nconv; j++)
-       {
+    
+    if( projection_type == 0) {
+    
+      for(i=0; i<nconv; i++)
+      {
+        assign_complex_to_spinor(r,&evecs[i*12*N],12*N);
+        f(ax,r);
+        c1 = scalar_prod(r,ax,N,parallel);
+        H[i+nconv*i] = creal(c1);  //diagonal should be real
+        for(j=i+1; j<nconv; j++)
+        {
           assign_complex_to_spinor(r,&evecs[j*12*N],12*N);
           c1 = scalar_prod(r,ax,N,parallel);
           H[j+nconv*i] = c1;
           H[i+nconv*j] = conj(c1); //enforce hermiticity
-       }
-     }
+        }
+      }
+
+    } else if ( projection_type == 1 )  {
+
+      for(i=0; i<nconv; i++)
+      {
+        assign_complex_to_spinor(tmps1, &evecs[i*12*N], 12*N);
+        f_final(r, tmps1);
+        f(ax,r);
+        c1 = scalar_prod(r,ax,N,parallel);
+        c2 = scalar_prod(r,r,N,parallel);
+        H[i+nconv*i] = creal(c1) / creal(c2);   //diagonal should be real
+        for(j=i+1; j<nconv; j++)
+        {
+          assign_complex_to_spinor(tmps1, &evecs[j*12*N], 12*N);
+          f_final(r, tmps1);
+          c1 = scalar_prod(r,ax,N,parallel);
+          c3 = scalar_prod(r, r, N, parallel);
+
+          H[j+nconv*i] = c1 / sqrt( creal(c2) * creal(c3) );
+          H[i+nconv*j] = conj(c1) / sqrt( creal(c2) * creal(c3) ); //enforce hermiticity
+        }
+      }
+    }
+
+
     et2=gettime();
     if(g_proc_id == g_stdio_proc) {
       fprintf(stdout,"[arpack_cg] time to compute H: %+e\n",et2-et1);
@@ -498,7 +526,6 @@ int arpack_cg(
           }
         }
 
-
         for(i=0; i<nconv; i++) {
           assign_complex_to_spinor(r,&evecs[i*12*N],12*N);
           f_final(tmps1, r);
@@ -520,6 +547,7 @@ int arpack_cg(
       } 
       /* END OF TEST */
 #endif
+
 
 
       /* --------------------------------------------------------- */
