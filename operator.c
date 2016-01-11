@@ -144,6 +144,7 @@ int add_operator(const int type) {
    (optr->solver_params).arpackcg_read_ev=0;
    (optr->solver_params).arpackcg_write_ev=0;
    (optr->solver_params).arpackcg_projection_type=0;
+   (optr->solver_params).arpack_evecs_writeprec=32;
    strncpy((optr->solver_params).arpack_evecs_filename,"eigenvectors",300);
 
    //chebyshev polynomial related parameters

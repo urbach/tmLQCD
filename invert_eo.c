@@ -199,7 +199,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
                               solver_params.arpackcg_evals_kind, solver_params.arpackcg_comp_evecs, solver_params.use_acc,
                               solver_params.cheb_k, solver_params.op_evmin, solver_params.op_evmax, solver_params.arpack_logfile,
                               solver_params.arpackcg_read_ev, solver_params.arpackcg_write_ev,solver_params.arpack_evecs_filename,
-                              solver_params.arpackcg_projection_type, &Qtm_plus_psi, &Qtm_minus_psi);
+                              solver_params.arpack_evecs_writeprec, solver_params.arpackcg_projection_type, &Qtm_plus_psi, &Qtm_minus_psi);
 
        Qtm_minus_psi(Odd_new, Odd_new);
     }

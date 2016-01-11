@@ -93,6 +93,8 @@ typedef struct {
 
    int arpackcg_projection_type;
 
+   int arpack_evecs_writeprec;
+
 } solver_params_t;
 
 

@@ -86,6 +86,7 @@ int arpack_cg(
      int  arpack_read_ev,           /*(IN) read eigenvectors in Schur basis from file */
      int  arpack_write_ev,          /*(IN) write eigenvectors in Schur basis to file */
      char *arpack_evecs_filename,   /*(IN) file name to be used for reading and writing evecs from and to disc */
+     int arpack_evecs_writeprec,    /*(IN) precision used for writing eigenvectors */
      int projection_type,           /* how to project with approximate eigenvectors */
      matrix_mult f_final,           /* final operator application during projection of type 1 */
      matrix_mult f_initial          /* initial operator application during projection of type 1 */
@@ -115,6 +116,7 @@ int arpack_cg(
   WRITER *evecs_writer=NULL;
   spinor *evecs_ptr0 = NULL, *evecs_ptr1 = NULL;
   paramsPropagatorFormat *evecs_propagatorFormat = NULL;
+  void *evecs_io_buffer = NULL;
 
   int parallel;        /* for parallel processing of the scalar products */
   #ifdef MPI
@@ -213,9 +215,30 @@ int arpack_cg(
       }
       fprintf(stdout, "# [arpack_cg] reading eigenvectors from file %s\n", evecs_filename);
 
-      et1=gettime();
-      evecs_count = fread( evecs, sizeof(_Complex double), (size_t)nev*12*N, evecs_fs);
-      et2=gettime();
+      if(arpack_evecs_writeprec == 64) {
+ 
+        evecs_io_buffer = (void*)evecs;
+ 
+        et1=gettime();
+        evecs_count = fread( evecs_io_buffer, sizeof(_Complex double), (size_t)nev*12*N, evecs_fs);
+        et2=gettime();
+        
+      } else {
+        evecs_io_buffer = malloc(sizeof(_Complex double) * (size_t)nev*12*N );
+        if( evecs_io_buffer == NULL) {
+          fprintf(stderr, "[arpack_cg] (%.4d) Error, could not allocate memory for evecs_io_buffer\n", g_cart_id);
+          return(-42);
+        }
+
+        et1=gettime();
+        evecs_count = fread( evecs_io_buffer, sizeof(_Complex double)/2, (size_t)nev*12*N, evecs_fs);
+        et2=gettime();
+
+        single2double(evecs, evecs_io_buffer, nev*24*N);
+
+        free( evecs_io_buffer );
+        evecs_io_buffer = NULL;
+      }
        
       if( evecs_count != ((size_t)nev*12*N) ) {
         fprintf(stderr, "[arpack_cg] (%.4d) Error, could not proper amount of data from file %s\n", g_cart_id, evecs_filename);
@@ -274,10 +297,29 @@ int arpack_cg(
           fprintf(stderr, "[arpack_cg] (%.4d) Error, could not open file %s for writing\n", g_cart_id, evecs_filename);
           return(-4);
         }
+        
+        if(arpack_evecs_writeprec == 64) {
+
+          evecs_io_buffer = (void*)evecs;
+
+          et1=gettime();
+          evecs_count = fwrite( evecs_io_buffer, sizeof(_Complex double), (size_t)nconv*12*N, evecs_fs);
+          et2=gettime();
+
+        } else {
+          evecs_io_buffer = malloc(sizeof(_Complex double) * (size_t)nconv*12*N );
+          if( evecs_io_buffer == NULL) {
+            fprintf(stderr, "[arpack_cg] (%.4d) Error, could not allocate memory for evecs_io_buffer\n", g_cart_id);
+            return(-41);
+          }
+          double2single(evecs_io_buffer, evecs, nconv*24*N);
  
-        et1=gettime();
-        evecs_count = fwrite( evecs, sizeof(_Complex double), (size_t)nconv*12*N, evecs_fs);
-        et2=gettime();
+          et1=gettime();
+          evecs_count = fwrite( evecs_io_buffer, sizeof(_Complex double)/2, (size_t)nconv*12*N, evecs_fs);
+          et2=gettime();
+          free(evecs_io_buffer);
+          evecs_io_buffer = NULL;
+        }
  
         if( evecs_count != ((size_t)nconv*12*N) ) {
           fprintf(stderr, "[arpack_cg] (%.4d) Error, could not write proper amount of data to file %s\n", g_cart_id, evecs_filename);
@@ -295,12 +337,12 @@ int arpack_cg(
           for(i=0; i<nconv; i++) {
             sprintf(evecs_filename, "%s.ev%.5d", arpack_evecs_filename, i);
             construct_writer(&evecs_writer, evecs_filename, 0);
-            evecs_propagatorFormat = construct_paramsPropagatorFormat(64, 1);
+            evecs_propagatorFormat = construct_paramsPropagatorFormat(arpack_evecs_writeprec, 1);
             write_propagator_format(evecs_writer, evecs_propagatorFormat);
             free(evecs_propagatorFormat);
             evecs_ptr0 = (spinor*)&(evecs[i*12*N]);
             evecs_ptr1 = NULL;
-            write_spinor(evecs_writer, &evecs_ptr0, &evecs_ptr1,1, 64);
+            write_spinor(evecs_writer, &evecs_ptr0, &evecs_ptr1, 1, arpack_evecs_writeprec);
             destruct_writer(evecs_writer);
             evecs_writer=NULL;
           } /* end of loop on converged eigenvectors */
@@ -308,12 +350,12 @@ int arpack_cg(
           for(i=0; i<nconv/2; i++) {
             sprintf(evecs_filename, "%s.ev%.5d", arpack_evecs_filename, 2*i);
             construct_writer(&evecs_writer, evecs_filename, 0);
-            evecs_propagatorFormat = construct_paramsPropagatorFormat(64, 1);
+            evecs_propagatorFormat = construct_paramsPropagatorFormat(arpack_evecs_writeprec, 1);
             write_propagator_format(evecs_writer, evecs_propagatorFormat);
             free(evecs_propagatorFormat);
             evecs_ptr0 = (spinor*)&(evecs[(2*i  )*12*N]);
             evecs_ptr1 = (spinor*)&(evecs[(2*i+1)*12*N]);
-            write_spinor(evecs_writer, &evecs_ptr0, &evecs_ptr1,1, 64);
+            write_spinor(evecs_writer, &evecs_ptr0, &evecs_ptr1,1, arpack_evecs_writeprec);
             destruct_writer(evecs_writer);
             evecs_writer=NULL;
           } /* end of loop on converged eigenvectors */

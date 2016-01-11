@@ -684,6 +684,11 @@ static inline void rmQuotes(char *str){
     strncpy( (optr->solver_params).arpack_evecs_filename, fname, 200) ;
     if(myverbose) printf("  ARPACK evecs file name is set to %s line %d operator %d\n", fname, line_of_file, current_operator);
   }
+  {SPC}*ARPACKEvecsWriteprec{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).arpack_evecs_writeprec = a;
+    if(myverbose) printf("  ARPACK evecs precision for writing set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
   {SPC}*ExtraMasses{EQL}{FLTLIST} {
     char * token = NULL;
     optr->no_extra_masses = 0;
