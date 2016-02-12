@@ -106,6 +106,9 @@ int add_operator(const int type) {
   optr->conf_input = _default_gauge_input_filename;
   optr->no_extra_masses = 0;
 
+  optr->npergauge = 1;
+  optr->n = 0;
+
   optr->applyM = &dummy_D;
   optr->applyQ = &dummy_D;
   optr->applyQp = &dummy_D;
@@ -441,18 +444,18 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       convert_eo_to_lexic(g_spinor_field[8], optr->sr0, optr->sr1);
       convert_eo_to_lexic(g_spinor_field[9], optr->sr2, optr->sr3);
       compact(g_bispinor_field[1], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-
-      cg_her_bi(g_bispinor_field[0], g_bispinor_field[1],
-		optr->maxiter, optr->eps_sq, optr->rel_prec, VOLUME, optr->applyQsqbi);
+      
+      optr->iterations = cg_her_bi(g_bispinor_field[0], g_bispinor_field[1],
+                optr->maxiter, optr->eps_sq, optr->rel_prec, VOLUME, optr->applyQsqbi);
 
       optr->applyQsqbi(g_bispinor_field[2], g_bispinor_field[0]);
       assign_diff_mul((spinor*)g_bispinor_field[2], (spinor*)g_bispinor_field[1], 1.0, 2*VOLUME);
       double squarenorm = square_norm((spinor*)g_bispinor_field[2], 2*VOLUME, 1);
+      optr->reached_prec = squarenorm;
       if(g_proc_id==0) {
-	printf("# BSM Dirac inversion ||A*result1-b||^2 = %e\n\n", squarenorm);
-	fflush(stdout);
+        printf("# BSM Dirac inversion ||A*result1-b||^2 = %e\n\n", squarenorm);
+        fflush(stdout);
       }
-
 
       D_psi_dagger_BSM(g_bispinor_field[1], g_bispinor_field[0]);
       decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], g_bispinor_field[1]);
@@ -466,16 +469,19 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       compact(g_bispinor_field[0], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
 
       D_psi_BSM(g_bispinor_field[1], g_bispinor_field[0]);
-
-      cg_her_bi(g_bispinor_field[0], g_bispinor_field[1],
-		optr->maxiter, optr->eps_sq, optr->rel_prec, VOLUME, optr->applyQsqbi);
+      
+      // accumulate number of iterations
+      optr->iterations += cg_her_bi(g_bispinor_field[0], g_bispinor_field[1],
+                                    optr->maxiter, optr->eps_sq, optr->rel_prec, VOLUME, optr->applyQsqbi);
 
       optr->applyQsqbi(g_bispinor_field[2], g_bispinor_field[0]);
       assign_diff_mul((spinor*)g_bispinor_field[2], (spinor*)g_bispinor_field[1], 1.0, 2*VOLUME);
       squarenorm = square_norm((spinor*)g_bispinor_field[2], 2*VOLUME, 1);
+      // store the larger of the two residual norms
+      optr->reached_prec = optr->reached_prec > squarenorm ? optr->reached_prec : squarenorm;
       if(g_proc_id==0) {
-	printf("# BSM Dirac inversion ||A*result1-b||^2 = %e\n\n", squarenorm);
-	fflush(stdout);
+        printf("# BSM Dirac inversion ||A*result1-b||^2 = %e\n\n", squarenorm);
+        fflush(stdout);
       }
 
       D_psi_dagger_BSM(g_bispinor_field[1], g_bispinor_field[0]);
@@ -489,13 +495,13 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 
       // mirror sources
       if(i == 0 && SourceInfo.no_flavours == 2 && SourceInfo.type != 1) {
-	spinor * tmp;
-	tmp = optr->sr0;
-	optr->sr0 = optr->sr2;
-	optr->sr2 = tmp;
-	tmp = optr->sr1;
-	optr->sr1 = optr->sr3;
-	optr->sr3 = tmp;
+        spinor * tmp;
+        tmp = optr->sr0;
+        optr->sr0 = optr->sr2;
+        optr->sr2 = tmp;
+        tmp = optr->sr1;
+        optr->sr1 = optr->sr3;
+        optr->sr3 = tmp;
       }
       /* volume sources need only one inversion */
       else if(SourceInfo.type == 1) i++;
@@ -513,7 +519,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 
 void op_write_prop(const int op_id, const int index_start, const int append_) {
   operator * optr = &operator_list[op_id];
-  char filename[100];
+  const unsigned int strl = 100;
+  char filename[strl];
   char ending[15];
   WRITER *writer = NULL;
   int append = 0;
@@ -531,17 +538,31 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   else {
     strcpy(ending, "inverted");
   }
-
+  
+  // 1 == volume source
   if(SourceInfo.type != 1) {
     if (PropInfo.splitted) {
-      sprintf(filename, "%s.%.4d.%.2d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
+      /* operators with additional external fields require one more index */
+      if(optr->type==BSM){
+        snprintf(filename, strl, "%s.%.4d.%.2d.%.2d.%03d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, optr->n, ending);
+      }else{
+        snprintf(filename, strl, "%s.%.4d.%.2d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
+      }
     }
     else {
-      sprintf(filename, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
+      if(optr->type==BSM){
+        snprintf(filename, strl, "%s.%.4d.%.2d.%03d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, optr->n, ending);
+      }else{
+        snprintf(filename, strl, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
+      }
     }
   }
   else {
-    sprintf(filename, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
+    if(optr->type==BSM){
+      snprintf(filename, strl, "%s.%.4d.%.5d.%03d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, optr->n, ending);
+    } else {
+      snprintf(filename, strl, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
+    }
   }
 
   if(!PropInfo.splitted || append_)
