@@ -54,12 +54,32 @@
 #define _default_g_beta 6.0
 #define _default_g_N_s 20
 #define _default_g_dflgcr_flag 0
+#define _default_little_evenodd 0
+#define _default_usePL 0
+#define _default_little_solver 0
+#define _default_little_gmres_m_parameter 50
+#define _default_little_solver_max_iter 20
+#define _default_little_solver_low_prec 1.0e-2
+#define _default_little_solver_high_prec 1.0e-10
+
+#define _default_Msap_precon 1
+#define _default_NiterMsap 3
+#define _default_NcycleMsap 2
+#define _default_kappa_Msap -1.
+#define _default_mu_Msap -20.
+
+#define _default_NiterMsap_dflgen 4
+#define _default_NcycleMsap_dflgen 4
+#define _default_NsmoothMsap_dflgen 2
+#define _default_kappa_dflgen -1.
+#define _default_mu_dflgen -20.
+#define _default_kappa_dfl -1.
+#define _default_mu_dfl -20.
+
 #define _default_random_seed 123456
 #define _default_rlxd_level 1
-//this is CG
-#define _default_solver_flag 1
-//this is CGMMSND
-#define _default_nd_solver_flag 14
+#define _default_solver_flag 1 // this is CG (see solver/solver_types.h)
+#define _default_nd_solver_flag 15 // this is CGMMSND (see solver/solver_types.h)
 #define _default_startoption 0
 #define _default_Ntherm 0
 #define _default_Nmeas 1
@@ -171,7 +191,7 @@
 
 /* default mixed precision solver values */
 #define _default_mixcg_innereps 1.0e-6
-#define _default_mixcg_maxinnersolverit 1500
+#define _default_mixcg_maxinnersolverit 5000
 
 #define _default_use_preconditioning 0
 

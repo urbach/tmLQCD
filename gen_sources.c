@@ -36,10 +36,10 @@
 #include <time.h>
 #include <sys/time.h>
 #include <string.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -98,11 +98,11 @@ int main(int argc,char *argv[]) {
   L=0;
   T=0;
   
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Init(&argc, &argv);
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   /* FIXME: in principle this should not be set like this as it could result
     in thread oversubscription when more than one process is run locally
     unfortunately, there does not seem to be a standard way to determine
@@ -206,10 +206,16 @@ int main(int argc,char *argv[]) {
     for(is = 0; is < 4; is ++) {
       for(ic = 0; ic < 3; ic++) {
 	if(!filenameflag && !appendflag) {
-	  sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d.%.2d", filename, nstore, sample, t0, 3*is+ic); 
+          if(T_global > 99) {
+            sprintf(spinorfilename, "%s.%.4d.%.4d.%.3d.%.2d", filename, nstore, sample, t0, 3*is+ic);
+          }
+          else {
+            sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d.%.2d", filename, nstore, sample, t0, 3*is+ic);
+          }
 	}
 	else if(!filenameflag && appendflag) {
-	  sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d", filename, nstore, sample, t0); 
+          if(T_global > 99) sprintf(spinorfilename, "%s.%.4d.%.4d.%.3d", filename, nstore, sample, t0); 
+	  else sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d", filename, nstore, sample, t0); 
 	}
 	else{
 	  sprintf(spinorfilename, "%s.%.2d", filename, 3*is+ic); 
@@ -233,7 +239,8 @@ int main(int argc,char *argv[]) {
   else {
     if(!ext_sourceflag) {
       if(!filenameflag) {
-	sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d", filename, nstore, sample, t0); 
+	if(T_global > 99) sprintf(spinorfilename, "%s.%.4d.%.4d.%.3d", filename, nstore, sample, t0); 
+        else sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d", filename, nstore, sample, t0); 
       }
       else {
 	sprintf(spinorfilename, "%s", filename); 
@@ -249,7 +256,8 @@ int main(int argc,char *argv[]) {
     }
     else {
       if(!filenameflag) {
-        sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d.inverted", filename, nstore, sample, t0);
+        if(T_global > 99) sprintf(spinorfilename, "%s.%.4d.%.4d.%.3d.inverted", filename, nstore, sample, t0);
+        else sprintf(spinorfilename, "%s.%.4d.%.4d.%.2d.inverted", filename, nstore, sample, t0);
       }
       else {
         sprintf(spinorfilename, "%s.inverted", filename);
@@ -261,7 +269,8 @@ int main(int argc,char *argv[]) {
 			   g_spinor_field[0], g_spinor_field[1],
 			   t0, 0., 0., 0.);
       if(!filenameflag) {
-	sprintf(spinorfilename, "g%s.%.4d.%.4d.%.2d", filename, nstore, sample, t0); 
+	if(T_global > 99) sprintf(spinorfilename, "g%s.%.4d.%.4d.%.3d", filename, nstore, sample, t0); 
+        else sprintf(spinorfilename, "g%s.%.4d.%.4d.%.2d", filename, nstore, sample, t0); 
       }
       else {
 	sprintf(spinorfilename, "g%s", filename); 
@@ -271,7 +280,7 @@ int main(int argc,char *argv[]) {
     }
   }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Finalize();
 #endif
   free_geometry_indices();

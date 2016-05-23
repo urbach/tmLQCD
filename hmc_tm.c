@@ -36,10 +36,10 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -52,7 +52,7 @@
 #include "start.h"
 #include "measure_gauge_action.h"
 #include "measure_rectangles.h"
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include "xchange/xchange.h"
 #endif
 #include "read_input.h"
@@ -123,9 +123,9 @@ int main(int argc,char *argv[]) {
   verbose = 1;
   g_use_clover_flag = 0;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 
-#  ifdef OMP
+#  ifdef TM_USE_OMP
   int mpi_thread_provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
 #  else
@@ -146,7 +146,7 @@ int main(int argc,char *argv[]) {
     exit(-1);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   init_openmp();
 #endif
 
@@ -164,7 +164,10 @@ int main(int argc,char *argv[]) {
 
   DUM_BI_MATRIX = DUM_BI_SOLVER+6;
   NO_OF_BISPINORFIELDS = DUM_BI_MATRIX+6;
-
+  
+  //4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.
+  NO_OF_SPINORFIELDS_32 = 6;
+  
   tmlqcd_mpi_init(argc, argv);
 
   if(nstore == -1) {
@@ -181,7 +184,7 @@ int main(int argc,char *argv[]) {
     }
   }
   
-#ifndef MPI
+#ifndef TM_USE_MPI
   g_dbw2rand = 0;
 #endif
   
@@ -190,8 +193,10 @@ int main(int argc,char *argv[]) {
   
 #ifdef _GAUGE_COPY
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
+  status += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
+  status += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 0);   
 #endif
   /* need temporary gauge field for gauge reread checks and in update_tm */
   status += init_gauge_tmp(VOLUME);
@@ -207,9 +212,11 @@ int main(int argc,char *argv[]) {
   }
   if(even_odd_flag) {
     j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
+    j += init_spinor_field_32(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS_32);      
   }
   else {
     j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
+    j += init_spinor_field_32(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS_32);    
   }
   if (j != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
@@ -279,9 +286,14 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(-1);
   }
-  if(g_sloppy_precision_flag == 1) {
-    init_dirac_halfspinor32();
-  }
+
+  j = init_dirac_halfspinor32();
+  if (j != 0)
+  {
+    fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
+    exit(-1);
+  } 
+  
 #  if (defined _PERSISTENT)
   init_xchange_halffield();
 #  endif
@@ -318,10 +330,14 @@ int main(int argc,char *argv[]) {
   }
 
   /*For parallelization: exchange the gaugefield */
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_gauge(g_gauge_field);
 #endif
-
+    
+  /*Convert to a 32 bit gauge field, after xchange*/
+  convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND + g_dbw2rand);
+  
+    
   if(even_odd_flag) {
     j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
   }
@@ -453,9 +469,10 @@ int main(int argc,char *argv[]) {
             } else {
               if(g_proc_id==0) {
                 if(read_attempt+1 < 2) {
-                  fprintf(stdout, "# Reread attempt %d out of %d failed, trying again in %d seconds!\n",read_attempt+1,2, 2);
-                } else {
-                  fprintf(stdout, "# Reread attept %d out of %d failed, write will be reattempted!\n",read_attempt+1,2);
+                  fprintf(stdout, "# Reread attempt %d out of %d failed, trying again in %d seconds!\n", read_attempt+1, 2, 2);
+                } 
+		else {
+                  fprintf(stdout, "# Reread attempt %d out of %d failed, write will be reattempted!\n", read_attempt+1, 2);
                 }
               }
               sleep(2);
@@ -480,7 +497,7 @@ int main(int argc,char *argv[]) {
             fprintf(stdout, "# Will attempt to write again in %d seconds.\n", io_timeout);
           
           sleep(io_timeout);
-#ifdef MPI
+#ifdef TM_USE_MPI
           MPI_Barrier(MPI_COMM_WORLD);
 #endif
         }
@@ -517,7 +534,7 @@ int main(int argc,char *argv[]) {
       verbose = 0;
     }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
     MPI_Barrier(MPI_COMM_WORLD);
 #endif
     if(ix == 0 && g_proc_id == 0) {
@@ -538,13 +555,15 @@ int main(int argc,char *argv[]) {
     fclose(parameterfile);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif
   free_gauge_tmp();
   free_gauge_field();
+  free_gauge_field_32();  
   free_geometry_indices();
   free_spinor_field();
+  free_spinor_field_32();  
   free_moment_field();
   free_monomials();
   if(g_running_phmc) {
@@ -553,7 +572,9 @@ int main(int argc,char *argv[]) {
   }
   free(input_filename);
   free(filename);
-#ifdef MPI
+  free(SourceInfo.basename);
+  free(PropInfo.basename);
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif

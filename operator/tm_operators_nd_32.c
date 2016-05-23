@@ -39,7 +39,8 @@
 #include "linalg_eo.h"
 #include "operator/tm_operators_32.h"
 #include "operator/tm_operators_nd.h"
-#include "operator/D_psi_32.h"
+#include "operator/clovertm_operators_32.h"
+#include "operator/D_psi.h"
 #include "tm_operators_nd_32.h"
 
 
@@ -93,7 +94,7 @@ void M_ee_inv_ndpsi_32_orphaned(spinor32 * const l_s, spinor32 * const l_c,
   spinor32 *r_s, *r_c, *s_s, *s_c;
   su3_vector32 ALIGN32 phi1, phi2;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(unsigned int ix = 0; ix < (VOLUME/2); ++ix){
@@ -136,12 +137,12 @@ void M_ee_inv_ndpsi_32_orphaned(spinor32 * const l_s, spinor32 * const l_c,
 void M_ee_inv_ndpsi_32(spinor32 * const l_s, spinor32 * const l_c, 
 		    spinor32 * const k_s, spinor32 * const k_c,
 		    const float mu, const float eps) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
   M_ee_inv_ndpsi_32_orphaned(l_s, l_c, k_s, k_c, mu, eps);
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -155,7 +156,7 @@ void M_oo_sub_g5_ndpsi_32_orphaned(spinor32 * const l_s, spinor32 * const l_c,
   spinor32 *r_s, *r_c, *s_s, *s_c, *t_s, *t_c;
   su3_vector32 ALIGN32 phi1, phi2;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(unsigned int ix = 0; ix < (VOLUME/2); ++ix){
@@ -200,12 +201,12 @@ void M_oo_sub_g5_ndpsi_32(spinor32 * const l_s, spinor32 * const l_c,
 		       spinor32 * const k_s, spinor32 * const k_c,
 		       spinor32 * const j_s, spinor32 * const j_c,
 		       const float mu, const float eps) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
   M_oo_sub_g5_ndpsi_32_orphaned(l_s,l_c,k_s,k_c,j_s,j_c,mu,eps);
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -213,7 +214,7 @@ void M_oo_sub_g5_ndpsi_32(spinor32 * const l_s, spinor32 * const l_c,
 
 void Qtm_pm_ndpsi_32(spinor32 * const l_strange, spinor32 * const l_charm,
 		  spinor32 * const k_strange, spinor32 * const k_charm){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -255,9 +256,63 @@ void Qtm_pm_ndpsi_32(spinor32 * const l_strange, spinor32 * const l_charm,
   /* Twice  phmc_invmaxev  since we consider here  D Ddag  !!! */
   mul_r_32_orphaned(l_charm, (float) phmc_invmaxev*phmc_invmaxev, l_charm, VOLUME/2);
   mul_r_32_orphaned(l_strange, (float) phmc_invmaxev*phmc_invmaxev, l_strange, VOLUME/2);
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
 }
 
+void Qsw_pm_ndpsi_32(spinor32 * const l_strange, spinor32 * const l_charm,
+      spinor32 * const k_strange, spinor32 * const k_charm) {
+#ifdef TM_USE_OMP
+#pragma omp parallel
+  {
+#endif
+  /* FIRST THE  Qhat(2x2)^dagger  PART*/
+  /* Here the  M_oe Mee^-1 M_eo  implementation  */
+  Hopping_Matrix_32_orphaned(EO, g_spinor_field32[0], k_charm);
+  Hopping_Matrix_32_orphaned(EO, g_spinor_field32[1], k_strange);
+
+  assign_mul_one_sw_pm_imu_eps_32_orphaned(EE, g_spinor_field32[2], g_spinor_field32[3], 
+             g_spinor_field32[0], g_spinor_field32[1], -g_mubar, g_epsbar);
+  clover_inv_nd_32_orphaned(EE, g_spinor_field32[2], g_spinor_field32[3]);
+
+  Hopping_Matrix_32_orphaned(OE, g_spinor_field32[0], g_spinor_field32[2]);
+  Hopping_Matrix_32_orphaned(OE, g_spinor_field32[1], g_spinor_field32[3]);
+
+  // Here the M_oo  implementation  
+  clover_gamma5_nd_32_orphaned(OO, g_spinor_field32[2], g_spinor_field32[3], 
+         k_charm, k_strange,
+         g_spinor_field32[0], g_spinor_field32[1],
+         -g_mubar, -g_epsbar);
+
+  // and then the  Qhat(2x2)  PART 
+  // Recall in fact that   Q^hat = tau_1 Q tau_1  
+  // Here the  M_oe Mee^-1 M_eo  implementation  
+  // the re-ordering in s and c components is due to tau_1
+  Hopping_Matrix_32_orphaned(EO, g_spinor_field32[0], g_spinor_field32[3]);
+  Hopping_Matrix_32_orphaned(EO, g_spinor_field32[1], g_spinor_field32[2]);
+
+  assign_mul_one_sw_pm_imu_eps_32_orphaned(EE, g_spinor_field32[4], g_spinor_field32[5], 
+             g_spinor_field32[1], g_spinor_field32[0], g_mubar, g_epsbar);
+  clover_inv_nd_32_orphaned(EE, g_spinor_field32[4], g_spinor_field32[5]);
+
+  Hopping_Matrix_32_orphaned(OE, g_spinor_field32[0], g_spinor_field32[5]);
+  Hopping_Matrix_32_orphaned(OE, g_spinor_field32[1], g_spinor_field32[4]);
+
+  clover_gamma5_nd_32_orphaned(OO, l_charm, l_strange,
+         g_spinor_field32[2], g_spinor_field32[3],
+         g_spinor_field32[1], g_spinor_field32[0],
+         g_mubar, -g_epsbar);
+
+  /* At the end, the normalisation by the max. eigenvalue  */ 
+  /* Twice  phmc_invmaxev  since we consider here  D Ddag  !!! */
+  mul_r_32_orphaned(l_charm, phmc_invmaxev*phmc_invmaxev, l_charm, VOLUME/2);
+  mul_r_32_orphaned(l_strange, phmc_invmaxev*phmc_invmaxev, l_strange, VOLUME/2);
+
+#ifdef TM_USE_OMP /* OpenMP parallel closing brace */
+  }
+#endif
+
+  return;
+}

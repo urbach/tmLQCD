@@ -49,7 +49,7 @@ __alignx(32, s);
 #pragma pomp inst begin(hoppingmatrix)
 #endif
 
-#ifndef OMP  
+#ifndef TM_USE_OMP  
 s = k;
 _prefetch_spinor(s);
 U = g_gauge_field_copy[ieo][0];
@@ -64,13 +64,13 @@ g_sloppy_precision = 0;
 if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
   phi32 = NBPointer32[ieo];
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #else
   ix=0;
 #endif
   for(unsigned int i = 0; i < (VOLUME)/2; i++) {
-#ifdef OMP
+#ifdef TM_USE_OMP
     U=u0+i*4;
     s=k+i;
     ix=i*8;
@@ -102,15 +102,15 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
     
     _hop_z_m_pre32();
     
-#ifndef OMP
+#ifndef TM_USE_OMP
     s++;
     ix++;
 #endif
   }
 
-#if (defined MPI && !defined _NO_COMM)
+#if (defined TM_USE_MPI && !defined _NO_COMM)
   
-#  ifdef OMP
+#  ifdef TM_USE_OMP
 #  pragma omp single nowait
   {
 #  endif
@@ -140,12 +140,12 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
       wait_halffield();
 #    endif
 #   endif /* SPI */
-#  ifdef OMP
+#  ifdef TM_USE_OMP
   }
 #  endif
 #endif
   
-#ifndef OMP
+#ifndef TM_USE_OMP
   s = l;
   if(ieo == 0) {
     U = g_gauge_field_copy[1][0];
@@ -164,7 +164,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
   
   phi32 = NBPointer32[2 + ieo];
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #  ifdef _THREAD_OVERLAP
 #pragma omp for schedule(guided,32)
 #  else
@@ -174,7 +174,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
   ix = 0;
 #endif
   for(unsigned int i = 0; i < bodyV; i++){
-#ifdef OMP
+#ifdef TM_USE_OMP
     ix=i*8;
     s=l+i;
     U=u0+i*4;
@@ -217,7 +217,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
     _hop_store_post(s);
 #endif
     
-#ifndef OMP
+#ifndef TM_USE_OMP
     U++;
     ix++;
     s++;
@@ -225,12 +225,12 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
   }
   
 #ifndef _THREAD_OVERLAP
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp single
   {
 #endif
     
-#    if (defined MPI && !defined _NO_COMM)
+#    if (defined TM_USE_MPI && !defined _NO_COMM)
 #      ifdef SPI
     // wait for receive completion
     while ( recvCounter > 0 );
@@ -240,18 +240,18 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #      endif
 #    endif
     
-#ifdef OMP
+#ifdef TM_USE_OMP
   }
 #endif
 #endif /* _THREAD_OVERLAP */
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #else
   ix = 0;
 #endif
   for(unsigned int i = bodyV; i < VOLUME/2; i++) {
-#ifdef OMP
+#ifdef TM_USE_OMP
     ix=i*8;
     s=l+i;
     U=u0+i*4;
@@ -294,7 +294,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
     _hop_store_post(s);
 #endif
     
-#ifndef OMP
+#ifndef TM_USE_OMP
     U++;
     ix++;
     s++;
@@ -304,13 +304,13 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
  else {
    phi = NBPointer[ieo];
    
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #else
    ix=0;
 #endif
    for(unsigned int i = 0; i < (VOLUME)/2; i++){
-#ifdef OMP
+#ifdef TM_USE_OMP
      s=k+i;
      _prefetch_spinor(s);
      ix=i*8;
@@ -345,14 +345,14 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
      
      _hop_z_m_pre();
      
-#ifndef OMP
+#ifndef TM_USE_OMP
      s++;            
      ix++;
 #endif
    }
 
-#if (defined MPI && !defined _NO_COMM)
-#  ifdef OMP
+#if (defined TM_USE_MPI && !defined _NO_COMM)
+#  ifdef TM_USE_OMP
 #  pragma omp single nowait
    {
 #  endif
@@ -384,12 +384,12 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
   
 #    endif // SPI
      
-#  ifdef OMP
+#  ifdef TM_USE_OMP
    }
 #  endif
 #endif
    
-#ifndef OMP
+#ifndef TM_USE_OMP
    s = l;
    if(ieo == 0) {
      U = g_gauge_field_copy[1][0];
@@ -409,7 +409,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
    
    phi = NBPointer[2 + ieo];
    
-#ifdef OMP
+#ifdef TM_USE_OMP
 #ifdef _THREAD_OVERLAP
 #pragma omp for schedule(guided,32)
 #else
@@ -419,7 +419,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
    ix = 0;
 #endif
    for(unsigned int i = 0; i < bodyV; i++){
-#ifdef OMP
+#ifdef TM_USE_OMP
      ix=i*8;
      U=u0+i*4;
      _prefetch_su3(U);
@@ -464,7 +464,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
      _hop_store_post(s);
 #endif
      
-#ifndef OMP
+#ifndef TM_USE_OMP
      U++;
      ix++;
      s++;
@@ -472,12 +472,12 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
    }
 
 #ifndef _THREAD_OVERLAP
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp single
    {
 #endif
      
-#    if (defined MPI && !defined _NO_COMM)
+#    if (defined TM_USE_MPI && !defined _NO_COMM)
 #      ifdef SPI
      // wait for receive completion
      while ( recvCounter > 0 );
@@ -487,18 +487,18 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #      endif
 #    endif
      
-#ifdef OMP
+#ifdef TM_USE_OMP
    }
 #endif
 #endif /* _THREAD_OVERLAP */
 
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
    /* #pragma ivdep */
    for(unsigned int i = bodyV; i < VOLUME/2; i++){
-#ifdef OMP
+#ifdef TM_USE_OMP
      ix=i*8;
      U=u0+i*4;
      _prefetch_su3(U);
@@ -543,7 +543,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
      _hop_store_post(s);
 #endif
      
-#ifndef OMP
+#ifndef TM_USE_OMP
      U++;
      ix++;
      s++;

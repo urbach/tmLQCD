@@ -26,7 +26,7 @@
 #include <math.h>
 #include <time.h>
 #include <assert.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -84,19 +84,21 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
 	    /* automatic timeslice detection */
 	    if(g_proc_id == 0) {
 	      for(t = 0; t < g_nproc_t*T; t++) {
-		sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, t, ix);
+		if(T_global > 99) sprintf(source_filename, "%s.%.4d.%.3d.%.2d", SourceInfo.basename, nstore, t, ix);
+                else sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, t, ix);
 		if( (ifs = fopen(source_filename, "r")) != NULL) {
 		  fclose(ifs);
 		  break;
 		}
 	      }
 	    }
-#ifdef MPI
+#ifdef TM_USE_MPI
 	    MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
 	    SourceInfo.t = t;
 	  }
-          sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, SourceInfo.t, ix);
+          if(T_global > 99) sprintf(source_filename, "%s.%.4d.%.3d.%.2d", SourceInfo.basename, nstore, SourceInfo.t, ix);
+          else sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, SourceInfo.t, ix);
           if (g_cart_id == 0) {
             printf("# Trying to read source from %s\n", source_filename);
           }
@@ -115,10 +117,12 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
         }
       }
       if (PropInfo.splitted) {
-        sprintf(source_filename, "%s.%.4d.%.2d.%.2d.inverted", PropInfo.basename, nstore, SourceInfo.t, ix);
+        if(T_global > 99) sprintf(source_filename, "%s.%.4d.%.3d.%.2d.inverted", PropInfo.basename, nstore, SourceInfo.t, ix);
+        else sprintf(source_filename, "%s.%.4d.%.2d.%.2d.inverted", PropInfo.basename, nstore, SourceInfo.t, ix);
       }
       else {
-        sprintf(source_filename, "%s.%.4d.%.2d.inverted", PropInfo.basename, nstore, SourceInfo.t);
+        if(T_global > 99) sprintf(source_filename, "%s.%.4d.%.3d.inverted", PropInfo.basename, nstore, SourceInfo.t);
+        else sprintf(source_filename, "%s.%.4d.%.2d.inverted", PropInfo.basename, nstore, SourceInfo.t);
       }
     }
     else if(source_type == 1) {
@@ -151,7 +155,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     /* If the solver is _not_ CG we might read in */
     /* here some better guess                     */
     /* This also works for re-iteration           */
-    if (optr->solver != CG && optr->solver != PCG && optr->solver != MIXEDCG) {
+    if (optr->solver != CG && optr->solver != PCG && optr->solver != MIXEDCG && optr->solver != RGMIXEDCG) {
       ifs = fopen(source_filename, "r");
       if (ifs != NULL) {
         if (g_cart_id == 0) {
@@ -209,7 +213,8 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
           }
           else {
         if(SourceInfo.splitted) {
-          sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, SourceInfo.t, ix);
+          if(T_global > 99) sprintf(source_filename, "%s.%.4d.%.3d.%.2d", SourceInfo.basename, nstore, SourceInfo.t, ix);
+          else sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, SourceInfo.t, ix);
         }
         else {
           sprintf(source_filename,"%s", SourceInfo.basename);
@@ -219,7 +224,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
         }
         if(read_spinor(g_spinor_field[2], g_spinor_field[3], source_filename, 0) != 0) {
           fprintf(stderr, "Error reading source! Aborting...\n");
-#ifdef MPI
+#ifdef TM_USE_MPI
           MPI_Abort(MPI_COMM_WORLD, 1);
           MPI_Finalize();
 #endif

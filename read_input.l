@@ -182,6 +182,12 @@ static inline void rmQuotes(char *str){
 
   int dfl_field_iter;
   int dfl_poly_iter;
+  double kappa_dflgen;
+  double mu_dflgen;
+  double kappa_dfl;
+  double mu_dfl;
+  double kappa_Msap;
+  double mu_Msap;
 
   int use_preconditioning;
   
@@ -208,7 +214,6 @@ static inline void rmQuotes(char *str){
 %x GAUGERPREC
 %x GAUGEWPREC
 %x DSBLIOCHECK
-%x DFLSP
 %x PRECON
 %x WRITECP
 %x CPINT
@@ -274,6 +279,9 @@ static inline void rmQuotes(char *str){
 %x GPU
 %x INITGPU
 
+%x DEFLATION
+%x INITDEFLATION
+
 %x INITOPERATOR
 %x TMOP
 %x DBTMOP
@@ -290,6 +298,7 @@ static inline void rmQuotes(char *str){
 %x DETMONOMIAL
 %x CLDETMONOMIAL
 %x CLDETRATMONOMIAL
+%x CLDETRATRWMONOMIAL
 %x GAUGEMONOMIAL
 %x NDPOLYMONOMIAL
 %x NDRATMONOMIAL
@@ -392,7 +401,6 @@ static inline void rmQuotes(char *str){
 ^WritePropagatorFormat{EQL}        BEGIN(WRPROPFLAG);
 ^PropagatorType{EQL}               BEGIN(WRPROPFLAG);
 ^RanluxdLevel{EQL}                 BEGIN(RLXDLEVEL);
-^DeflationSubspaceDimension{EQL}   BEGIN(DFLSP);
 ^GCRPreconditioner{EQL}            BEGIN(PRECON);
 ^ComputeReweightingFactor{EQL}     BEGIN(REWEIGH);
 ^NoReweightingSamples{EQL}         BEGIN(REWSAMPLES);
@@ -427,10 +435,9 @@ static inline void rmQuotes(char *str){
 ^DflPolyIter{EQL}                  BEGIN(DFLPOLYITER);
 
 ^BeginGPU                          BEGIN(INITGPU);
-
+^BeginDeflation		           BEGIN(INITDEFLATION);
 ^MixCGInnerEps{EQL}                BEGIN(MIXCGEPS);
 ^MixCGMaxIter{EQL}                 BEGIN(MIXCGIT);
-
 
 
 
@@ -501,6 +508,118 @@ static inline void rmQuotes(char *str){
   BEGIN(0);
   }
 }
+
+<INITDEFLATION>Init{SPC}* {
+ if(myverbose) printf("Initialising DEFLATION line %d\n", line_of_file); 
+ BEGIN(DEFLATION);
+ }
+<DEFLATION>{
+  {SPC}*DeflationSubspaceDimension{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+    g_N_s = a;
+    if(myverbose) printf("Number of global approximate eigenvectors (deflation subspace dimension) set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*NiterMsap{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+    NiterMsap = a;
+    if(myverbose) printf("NiterMsap for solver preconditioner set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*NcycleMsap{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+    NcycleMsap = a;
+    if(myverbose) printf("NcycleMsap for solver preconditioner set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*KappaMsap{EQL}{FLT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    kappa_Msap = c;
+    if(myverbose) printf("kappa for Msap preconditioner set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*2KappaMuMsap{EQL}{FLT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mu_Msap = c;
+    if(myverbose) printf("2KappaMu for Msap preconditioner set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*NiterMsapSubspace{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+    NiterMsap_dflgen = a;
+    if(myverbose) printf("NiterMsapDfl for subspace generation set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*NcycleMsapSubspace{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+    NcycleMsap_dflgen = a;
+    if(myverbose) printf("NcycleMsapDfl for subspace generation set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*NsmoothSubspace{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+    NsmoothMsap_dflgen = a;
+    if(myverbose) printf("NsmoothMsapDfl for subspace generation set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*LittleGMRESMParameter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+    little_gmres_m_parameter = a;
+    if(myverbose) printf("LittleGMRESMParameter set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*LittleSolverLowPrecision{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    little_solver_low_prec = c;
+    if(myverbose) printf("Low precision for little Dirac solver set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*LittleSolverHighPrecision{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    little_solver_high_prec = c;
+    if(myverbose) printf("High precision for little Dirac solver set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*LittleSolverMaxIter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+    little_solver_max_iter = a;
+    if(myverbose) printf("LittleSolverMaxIter set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*LittleSolver{EQL}(gcr|mcr|mr|fgmres) {
+    little_solver = 0;
+    if(myverbose) printf("Littlesolver set to gcr in line %d (currently no other solver available)\n", line_of_file);
+  }
+  {SPC}*useLittleLittleD{EQL}yes {
+    usePL = 1;
+    if(myverbose) printf("UsePL set to true line %d\n", line_of_file);
+  }
+  {SPC}*useLittleLittleD{EQL}no {
+    usePL = 0;
+    if(myverbose) printf("UsePL set to true line %d\n", line_of_file);
+  }
+  {SPC}*LittleEvenOdd{EQL}yes {
+    little_evenodd = 1;
+    if(myverbose) printf("LittleEvenOdd set to true line %d\n", line_of_file);
+  }
+  {SPC}*LittleEvenOdd{EQL}no {
+    little_evenodd = 0;
+    if(myverbose) printf("LittleEvenOdd set to true line %d\n", line_of_file);
+  }
+  {SPC}*KappaSubspace{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    kappa_dflgen = c;
+    if(myverbose) printf("kappa for subspace generation set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*2KappaMuSubspace{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mu_dflgen = c;
+    if(myverbose) printf("2KappaMu for subspace generation set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*kappa{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    kappa_dfl = c;
+    if(myverbose) printf("kappa for preconditioner set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*2KappaMu{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mu_dfl = c;
+    if(myverbose) printf("2KappaMu for preconditioner set to %e line %d\n", c, line_of_file);
+  }
+  EndDeflationInit{SPC}* {
+  if(myverbose) printf("DEFLATION parsed in line %d\n\n", line_of_file);
+  BEGIN(0);
+  }
+}
+
 
 
 <INITOPERATOR>{TYPE} {
@@ -585,6 +704,11 @@ static inline void rmQuotes(char *str){
     optr->rel_prec = 0;
     if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
+  {SPC}*mcgdelta{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
+    (optr->solver_params).mcg_delta = c;
+    if(myverbose) printf("  mcg_delta set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+  }
   {SPC}*EigCGnrhs{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     (optr->solver_params).eigcg_nrhs = a;
@@ -613,12 +737,12 @@ static inline void rmQuotes(char *str){
   {SPC}*EigCGtolsq1{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
     (optr->solver_params).eigcg_tolsq1 = c;
-    if(myverbose) printf("  EigCGtolsq1 set to %lf line %d operator %d\n", a, line_of_file, current_operator);
+    if(myverbose) printf("  EigCGtolsq1 set to %lf line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*EigCGrestolsq{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     (optr->solver_params).eigcg_restolsq = c;
-    if(myverbose) printf("  EigCGrestolsq set to %lf line %d operator %d\n", a, line_of_file, current_operator);
+    if(myverbose) printf("  EigCGrestolsq set to %lf line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*EigCGRandGuessOpt{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
@@ -712,8 +836,7 @@ static inline void rmQuotes(char *str){
   }
 }
 
-
-<WILSONOP,TMOP>{
+<WILSONOP,TMOP,CLOVEROP>{
   {SPC}*UseEvenOdd{EQL}yes {
     if(myverbose) printf("  Use even/odd preconditioning line %d operator %d\n", line_of_file, current_operator);
     optr->even_odd_flag = 1;
@@ -853,8 +976,13 @@ static inline void rmQuotes(char *str){
 
 <DBTMSOLVER,TMSOLVER,CSWSOLVER>{
   cg {
-    optr->solver=1;
+    optr->solver=CG;
     if(myverbose) printf("  Solver set to CG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  rgmixedcg {
+    optr->solver=RGMIXEDCG;
+    if(myverbose) printf("  Solver set to RGMixedCG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
 }
@@ -870,6 +998,11 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to BiCGstab line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
+  bicg {
+    optr->solver=BICG;
+    if(myverbose) printf("  Solver set to BiCG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
   pcg {
     optr->solver=PCG;
     if(myverbose) printf("  Solver set to PCG line %d operator %d\n", line_of_file, current_operator);
@@ -883,6 +1016,16 @@ static inline void rmQuotes(char *str){
   gcr {
     optr->solver=GCR;
     if(myverbose) printf("  Solver set to GCR line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  mcr {
+    optr->solver=MCR;
+    if(myverbose) printf("  Solver set to mCR line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  cr {
+    optr->solver=CR;
+    if(myverbose) printf("  Solver set to CR line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   gmresdr {
@@ -927,7 +1070,6 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
-
 }
 
 
@@ -937,17 +1079,24 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
+  dflgcr {
+    optr->solver=DFLGCR;
+    g_dflgcr_flag = 1;
+    if(myverbose) printf("  Solver set to DFL-GCR line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  dflfgmres {
+    optr->solver=DFLFGMRES;
+    g_dflgcr_flag = 1;
+    if(myverbose) printf("  Solver set to DFL-FGMRES line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
   mixedcg {
     optr->solver=MIXEDCG;
     if(myverbose) printf("  Solver set to MixedCG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
 }
-
-
-
-
-
 
 <OVSOLVER>{
   sumr {
@@ -961,6 +1110,7 @@ static inline void rmQuotes(char *str){
     BEGIN(OVERLAPOP);
   }
 }
+
 
 <INITMONOMIAL>{TYPE} {
   current_monomial++;
@@ -977,6 +1127,10 @@ static inline void rmQuotes(char *str){
   else if(strcmp(yytext, "CLOVERDETRATIO")==0) {
     mnl->type = CLOVERDETRATIO;
     strcpy((*mnl).name, "CLOVERDETRATIO");
+  }
+  else if(strcmp(yytext, "CLOVERDETRATIORW")==0) {
+    mnl->type = CLOVERDETRATIORW;
+    strcpy((*mnl).name, "CLOVERDETRATIORW");
   }
   else if(strcmp(yytext, "DETRATIO")==0) {
     mnl->type = DETRATIO;
@@ -1080,12 +1234,13 @@ static inline void rmQuotes(char *str){
   }
   else if(mnl->type == CLOVERDET) BEGIN(CLDETMONOMIAL);
   else if(mnl->type == CLOVERDETRATIO) BEGIN(CLDETRATMONOMIAL);
+  else if(mnl->type == CLOVERDETRATIORW) BEGIN(CLDETRATRWMONOMIAL);
   else BEGIN(DETMONOMIAL);
 }
 
 
 
-<DETMONOMIAL,GAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL>{
+<DETMONOMIAL,GAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*Timescale{EQL}{DIGIT}+ {
     if(mnl->type == NDDETRATIO) {
       mnl->timescale = -5;
@@ -1107,7 +1262,7 @@ static inline void rmQuotes(char *str){
   }
 }
 
-<CLDETMONOMIAL,CLDETRATMONOMIAL,CLPOLYMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
+<CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,CLPOLYMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*CSW{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->c_sw = c;
@@ -1115,7 +1270,7 @@ static inline void rmQuotes(char *str){
   }
 }
 
-<CLDETMONOMIAL,CLDETRATMONOMIAL>{
+<CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL>{
   {SPC}*rho{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->rho = c;
@@ -1123,7 +1278,7 @@ static inline void rmQuotes(char *str){
   }
 }
 
-<CLDETRATMONOMIAL>{
+<CLDETRATMONOMIAL,CLDETRATRWMONOMIAL>{
   {SPC}*rho2{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z]2 = %lf", name, &c);
     mnl->rho2 = c;
@@ -1131,7 +1286,7 @@ static inline void rmQuotes(char *str){
   }
 }
 
-<DETMONOMIAL,POLYMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL>{
+<DETMONOMIAL,POLYMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*Kappa{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->kappa = c;
@@ -1139,7 +1294,7 @@ static inline void rmQuotes(char *str){
   }
 }
 
-<DETMONOMIAL,POLYMONOMIAL>{
+<DETMONOMIAL,POLYMONOMIAL,CLDETRATRWMONOMIAL>{
   {SPC}*2KappaMu2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu2 = c;
@@ -1176,7 +1331,7 @@ static inline void rmQuotes(char *str){
   }
 }
 
-<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
+<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*ForcePrecision{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     mnl->forceprec = c;
@@ -1192,10 +1347,21 @@ static inline void rmQuotes(char *str){
     mnl->maxiter = a;
     if(myverbose) printf("  MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
+  {SPC}*mcgdelta{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
+    (mnl->solver_params).mcg_delta = c;
+    if(myverbose) printf("  mcg_delta set to %lf line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
 }
 
+<NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL>{
+  {SPC}*Solver{EQL} {
+   solver_caller=YY_START;
+   BEGIN(NDMSOLVER);
+  }
+}
 
-<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL>{
+<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL>{
   {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu = c;
@@ -1393,14 +1559,43 @@ static inline void rmQuotes(char *str){
 <MSOLVER>{
   CG {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
-    mnl->solver = 1;
+    mnl->solver = CG;
     BEGIN(solver_caller);
   }
-  bicgstab {
+  mixedCG {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
-    mnl->solver = 0;
+    mnl->solver = MIXEDCG;
     BEGIN(solver_caller);
   }
+  rgmixedCG {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = RGMIXEDCG;
+    BEGIN(solver_caller);
+  }
+  BICGSTAB {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = BICGSTAB;
+    BEGIN(solver_caller);
+  }
+}
+
+<NDMSOLVER>{
+  cgmmsnd {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = CGMMSND;
+    BEGIN(solver_caller);
+  }
+  mixedCGmmsnd {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = MIXEDCGMMSND;
+    BEGIN(solver_caller);
+  }
+  MCR {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = 14;
+    BEGIN(solver_caller);
+  }
+
 }
 
 <GTYPE>{
@@ -1527,15 +1722,15 @@ static inline void rmQuotes(char *str){
 
 <SOURCETYPE>{
   Point {
-    SourceInfo.type = 0;
+    SourceInfo.type = SRC_TYPE_POINT;
     if(myverbose) printf("Using Point Sources\n");
   }
   Volume {
-    SourceInfo.type = 1;
+    SourceInfo.type = SRC_TYPE_VOL;
     if(myverbose) printf("Using Volume Sources\n");
   }
   TimeSlice {
-    SourceInfo.type = 2;
+    SourceInfo.type = SRC_TYPE_TS;
     if(myverbose) printf("Using TimeSlice Sources\n");
   }
 }
@@ -1782,10 +1977,6 @@ static inline void rmQuotes(char *str){
 <GMRESDRNEV>{DIGIT}+ {
   gmresdr_nr_ev = atoi(yytext);
   if(myverbose!=0) printf("Deflate %d eigenvectors in GMRES-DR \n", gmresdr_nr_ev);
-}
-<DFLSP>{DIGIT}+ {
-  g_N_s = atoi(yytext);
-  if(myverbose!=0) printf("Deflation subspace dimension set to %d \n", g_N_s);
 }
 <PRECON>{
   none {
@@ -2133,8 +2324,7 @@ static inline void rmQuotes(char *str){
   BEGIN(comment_caller);
 }
 
-
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
@@ -2217,6 +2407,28 @@ int read_input(char * conf_file){
   g_beta = _default_g_beta;
   g_N_s = _default_g_N_s;
   g_dflgcr_flag = _default_g_dflgcr_flag;
+
+  Msap_precon = _default_Msap_precon;
+  NiterMsap = _default_NiterMsap;
+  NcycleMsap = _default_NcycleMsap;
+  kappa_Msap = _default_kappa_Msap;
+  mu_Msap = _default_mu_Msap;
+
+  NsmoothMsap_dflgen = _default_NsmoothMsap_dflgen;
+  NiterMsap_dflgen = _default_NiterMsap_dflgen;
+  NcycleMsap_dflgen = _default_NcycleMsap_dflgen;
+  usePL = _default_usePL;
+  mu_dflgen = _default_mu_dflgen;
+  kappa_dflgen = _default_kappa_dflgen;
+  mu_dfl = _default_mu_dfl;
+  kappa_dfl = _default_kappa_dfl;
+  little_solver_low_prec = _default_little_solver_low_prec;
+  little_solver_high_prec = _default_little_solver_high_prec;
+  little_solver_max_iter = _default_little_solver_max_iter;
+  little_evenodd = _default_little_evenodd;
+  little_solver = _default_little_solver;
+  little_gmres_m_parameter = _default_little_gmres_m_parameter;
+
   random_seed = _default_random_seed;
   rlxd_level = _default_rlxd_level;
   startoption = _default_startoption;
@@ -2237,9 +2449,9 @@ int read_input(char * conf_file){
   X3 = _default_X3;
   g_rgi_C1 = _default_g_rgi_C1;
   read_source_flag= _default_read_source_flag;
-  if(SourceInfo.basename == NULL) SourceInfo.basename = (char*)malloc(100*sizeof(char));
+  if(SourceInfo.basename == NULL) SourceInfo.basename = (char*)malloc(strlen(_default_source_filename)+10);
   strcpy(SourceInfo.basename, _default_source_filename);
-  if(PropInfo.basename == NULL) PropInfo.basename = (char*)malloc(100*sizeof(char));
+  if(PropInfo.basename == NULL) PropInfo.basename = (char*)malloc(strlen(_default_source_filename)+10);
   strcpy(PropInfo.basename, _default_source_filename);
   PropInfo.splitted = _default_propagator_splitted;
   SourceInfo.splitted = _default_source_splitted;
