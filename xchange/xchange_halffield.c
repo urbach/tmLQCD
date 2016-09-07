@@ -352,8 +352,8 @@ void xchange_halffield() {
   MPI_Irecv((void*)(recvBuffer + LX*LY*LZ + T*LY*LZ + T*LX*LZ), 
 	    T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_up, 504, g_cart_grid, &requests[15]); 
 #    endif
-  
-  //MPI_Waitall(reqcount, requests, status); 
+
+  /* in this version, MPI_waitall needs to be called explicitly! */  
 #  endif /* MPI */
   return;
   
@@ -373,6 +373,8 @@ void wait_halffield() {
 
 #endif /* def (_USE_SHMEM || _PERSISTENT) */ 
 
+// BaKo: not sure if it's a good idea to have a separate ifdef conditional
+// for the single precision version of xchange_halffield
 
 # if defined _INDEX_INDEP_GEOM
 // IIG xchange_halffield32 still Missing
@@ -381,17 +383,14 @@ void wait_halffield() {
 void xchange_halffield32() {
 
 #  ifdef TM_USE_MPI
-
-  MPI_Request requests[16];
-  MPI_Status status[16];
 #  ifdef PARALLELT
-  int reqcount = 4;
-#  elif defined PARALLELXT
-  int reqcount = 8;
+  reqcount = 4;
+# elif defined PARALLELXT
+  reqcount = 8;
 #  elif defined PARALLELXYT
-  int reqcount = 12;
+  reqcount = 12;
 #  elif defined PARALLELXYZT
-  int reqcount = 16;
+  reqcount = 16;
 #  endif
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchangehalf32)
@@ -463,7 +462,7 @@ void xchange_halffield32() {
 	    T*LX*LY*12/2, MPI_FLOAT, g_nb_z_up, 504, g_cart_grid, &requests[15]); 
 #    endif
 
-  MPI_Waitall(reqcount, requests, status); 
+  /* in this version, MPI_waitall needs to be called explicitly! */  
 #  endif /* MPI */
   return;
 #ifdef _KOJAK_INST
