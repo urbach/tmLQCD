@@ -135,7 +135,7 @@ _prefetch_su3_32(U);
 #  else // SPI
      xchange_halffield32(); 
 #    ifdef _THREAD_OVERLAP     
-        wait_halffield32();     
+        wait_halffield();     
 #    endif
 
 #  endif  // SPI
@@ -247,7 +247,7 @@ _prefetch_su3_32(U);
      while ( recvCounter > 0 );
      _bgq_msync();
 #      else
-     wait_halffield32();
+     wait_halffield();
 #      endif
 #    endif
      
